@@ -4,7 +4,7 @@
 
 ## 1. 接手与权威文档
 
-- 开始前阅读 [中文 README](README.zh-CN.md)、[英文 README](README.md) 和 [完整 PRD](docs/PRD.md)。
+- 开始前阅读 [中文 README](README.md)、[英文 README](README.en.md) 和 [完整 PRD](docs/PRD.md)。
 - `docs/PRD.md` 是产品行为、技术边界、默认值与验收标准的权威规格；README 是入口摘要。
 - 接手时核对实际文件、候选包与验收记录；不把规格、接口设想或性能目标写成已实现事实，也不把旧进程已加载新版作为未经确认的事实。
 - 核对工作目录、Git 根与工作树状态、目标文件、运行环境和端口；只检查与当前任务相关的范围。

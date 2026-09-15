@@ -95,7 +95,7 @@ function archiveNames(archive) {
 function isDocumentation(file) {
   return file === 'AGENTS.md'
     || file === 'README.md'
-    || file === 'README.zh-CN.md'
+    || file === 'README.en.md'
     || file.startsWith('docs/')
 }
 

@@ -1,52 +1,52 @@
-[English](README.md) | [简体中文](README.zh-CN.md)
+[简体中文](README.md) | [English](README.en.md)
 
 # DSH Session Conductor
 
-Native multi-session coordination for DeepSeek Harness Desktop. Create a focused child session from an ordinary conversation, open it through an inline card, and return to the creator through the child session header.
+面向 DeepSeek Harness Desktop 的原生多会话协调插件。它让用户在普通对话中创建聚焦的子会话，通过聊天内卡片打开子会话，并从子会话标题栏返回发起会话。
 
-The plugin keeps the parent conversation out of the child task by default. A child inherits the parent workspace and receives the title chosen by the parent. Its first delegated turn can return one terminal result to the original creation card without waking the parent model. Continuous monitoring remains an explicit user request.
+默认情况下，父会话不会参与子会话承担的工作。子会话继承父会话的工作区，并使用父会话指定的标题。子会话的首轮委派结束后，可以向原创建卡片一次性回传终态结果，而不会唤醒父会话模型。持续监控必须由用户明确要求。
 
-## What it provides
+## 能力概览
 
-| Capability | Behavior |
+| 能力 | 行为 |
 | --- | --- |
-| Native conversation links | Create/fork calls render an inline **Created conversation** card. The child header contains a link back to its origin. No floating panel is mounted. |
-| Delegation by default | After a successful create or fork, the parent presents the result and stops. It does not repeat, validate, summarize, or monitor the child task unless the user asks. |
-| One-shot completion return | A child with a nonempty initial instruction can update its original card once after that exact first delegated turn reaches a terminal state. It never creates a parent-model turn. |
-| Authorized progress reading | When requested, the parent can read public records from an authorized child history directly instead of asking the child to write a report file. |
-| Workspace and title inheritance | New tasks use the initiating conversation's current workspace by default; the initiating conversation supplies the child title. |
-| Controlled coordination | Tasks support attach, fork, steer, queue, withdraw unconsumed input, stop, handoff, scheduling, workflows, constraints, and budget accounting. |
+| 原生会话跳转 | 创建/分叉会在聊天中呈现“已创建会话”卡片；子会话标题栏提供返回来源会话的链接。不挂载浮动面板。 |
+| 默认委派即止 | 创建或分叉成功后，父会话只呈现结果并停止，不会重复、验证、汇总或监控子任务，除非用户明确要求。 |
+| 一次性完成回传 | 带非空首条指令的子会话可在其准确首轮委派结束后，仅向原创建卡片回传一次终态结果；不会创建父会话模型轮次。 |
+| 已授权进度读取 | 用户要求查看进度时，父会话可直接读取已授权子会话的公开历史，无须要求子会话额外写报告文件。 |
+| 工作区与标题继承 | 新任务默认使用发起会话当前工作区，子会话标题由发起会话指定。 |
+| 受控协调 | 支持加入、分叉、补充、排队、撤回未消费输入、停止、转交、定时计划、工作流、约束和预算计量。 |
 
-## User experience
+## 使用体验
 
-1. Ask the current conversation to create a task and give it a title and instruction.
-2. Open the child from the inline creation card.
-3. Use the child header to return to the originating conversation.
-4. When the child's initial delegated turn ends, its original card may show one bounded terminal result and public preview.
-5. Ask explicitly to monitor a task when ongoing updates are wanted.
+1. 在当前会话中要求创建任务，并给出标题和首条指令。
+2. 通过聊天内创建卡片打开子会话。
+3. 通过子会话标题栏返回发起会话。
+4. 子会话首轮委派结束时，原创建卡片可显示一次受限的终态结果和公开预览。
+5. 只有明确要求持续跟进时，才启用监控。
 
-The completion card is intentionally narrow: it is not a task acceptance signal, it does not follow later turns, and it does not replace `watch` or a direct history read.
+完成卡片的职责是有限的：它不代表任务验收，不跟随后续轮次，也不替代 `watch` 或直接历史读取。
 
-## Boundaries and safety
+## 边界与安全
 
-- Parent-to-child coordination uses stable task, binding, and operation identities; it does not infer relationships from titles or text.
-- Completion projection requires the original parent, current read permission, the exact initial relay/turn relationship, and a private per-card capability. The capability is kept out of URLs and rendered chat content.
-- Only bounded public user/assistant content is eligible for a completion preview. Reasoning, token chunks, private session data, and raw session logs are excluded.
-- A released task stops nonterminal completion observation. Previously persisted terminal data remains visible only while the original parent still has read permission.
-- Remote routing and HTTPS sharing are disabled by default. Installation does not start a remote or sharing service.
+- 父子关系通过稳定的 Task、Binding 和 Operation 身份保存，不依赖标题或文本猜测。
+- 回传需要原父会话、仍有效的读取权限、准确首条 relay/轮次关系，以及每张卡片的私有 capability；capability 不进入 URL 或渲染后的聊天正文。
+- 仅有限长度的公开 user/assistant 内容可作为预览。推理、token chunk、私有会话数据和原始 Session 日志均被排除。
+- Task 被 release 后，未终态回传不再继续观察；已持久化的终态只会在原父仍有读取权限时显示。
+- 远程路由和 HTTPS 分享默认关闭；安装不会启动远程或分享服务。
 
-## Compatibility and companion packages
+## 兼容性与配套包
 
-This repository contains the main plugin. Some capabilities require separately delivered companion packages:
+本仓库只包含主插件。部分能力需要独立交付的配套包：
 
-- `dsh-harness-compat` supplies the tested Host compatibility surface for isolated model settings and native fork targets.
-- `dsh-binary-files` supplies guarded binary-file writes.
+- `dsh-harness-compat` 提供已测试的 Host 兼容接口，用于隔离模型设置和原生 fork 目标参数。
+- `dsh-binary-files` 提供受保护的二进制文件写入能力。
 
-The plugin detects unavailable Host capabilities and refuses the affected operation instead of silently changing its meaning. It never rewrites the installed Desktop ASAR.
+当 Host 缺少某项能力时，插件会明确拒绝受影响的操作，不会静默改变语义。它不会改写已安装的 Desktop ASAR。
 
-## Development quick start
+## 开发快速开始
 
-Requirements: Node.js `^22.19.0 || >=24.0.0` and a compatible DeepSeek Harness development environment.
+要求：Node.js `^22.19.0 || >=24.0.0`，以及兼容的 DeepSeek Harness 开发环境。
 
 ```sh
 npm install
@@ -55,36 +55,36 @@ npm run lint
 npm run smoke
 ```
 
-`npm run check` type-checks source and tests, builds the Host/client/companion entry points, and runs Vitest. The npm package is not published. The local Desktop profile workflow is intentionally guarded and environment-specific; review [OPERATIONS](docs/OPERATIONS.md) before adapting it to another machine.
+`npm run check` 会检查源码和测试类型、构建 Host/client/配套入口，并运行 Vitest。本项目尚未发布到 npm。本地 Desktop Profile 安装流程有严格环境约束；在另一台机器适配前，请先阅读 [OPERATIONS](docs/OPERATIONS.md)。
 
-## Project layout
+## 项目结构
 
 ```text
-src/          Host services, coordination domain, storage, tools, and native chat UI
-companions/   Companion bridge entry points
-tests/        Unit, integration, lifecycle, and regression coverage
-docs/         PRD, API, operations, acceptance, compatibility, and demos
-scripts/      Build smoke checks and guarded local verification helpers
+src/          Host 服务、协调领域、存储、工具和原生聊天 UI
+companions/   配套桥接入口
+tests/        单元、集成、生命周期和回归测试
+docs/         PRD、API、运维、验收、兼容性和演示文档
+scripts/      构建 smoke 检查与受保护的本地验证工具
 ```
 
-## Validation status
+## 验证状态
 
-The current `0.1.6` source candidate passed the local source suite: 82 test files / 1,236 tests, plus lint and smoke checks. A clean local candidate has also been linked to one Desktop profile through the official offline CLI. This is local source and profile-link evidence only; it is not a published release, a general installation guarantee, or a completed GUI/Host/Edge end-to-end validation. See [ACCEPTANCE](docs/ACCEPTANCE.md) for the evidence and remaining work.
+当前 `0.1.6` 源码候选已通过本地源码检查：82 个测试文件 / 1,236 项测试，以及 lint 和 smoke。干净本地候选也已通过官方离线 CLI 链接到一个 Desktop Profile。这些只是本地源码和 Profile 链接证据，不代表已发布、通用安装保证，或完整 GUI/Host/Edge 端到端验证已完成。证据和待完成事项见 [ACCEPTANCE](docs/ACCEPTANCE.md)。
 
-## Documentation
+## 文档导航
 
-| Document | Purpose |
+| 文档 | 用途 |
 | --- | --- |
-| [PRD](docs/PRD.md) | Product behavior, defaults, architecture, and acceptance criteria |
-| [Implementation](docs/IMPLEMENTATION.md) | PRD-to-code/test mapping and milestone status |
-| [Operations](docs/OPERATIONS.md) | Local setup, operation, recovery, and uninstall guidance |
-| [API](docs/API.md) | Tools, routes, state, storage, and lifecycle contracts |
-| [Native links](docs/NATIVE-LINKS.md) | Parent/child navigation and completion-card boundaries |
-| [Acceptance](docs/ACCEPTANCE.md) | Verification evidence, artifacts, and known gaps |
-| [Demo](docs/DEMO.md) | Checked tool-argument examples |
-| [Compatibility](docs/compatibility.md) | Measured Host/runtime compatibility notes |
-| [Contributing guidance](AGENTS.md) | Implementation and collaboration rules |
+| [PRD](docs/PRD.md) | 产品行为、默认值、架构和验收标准 |
+| [IMPLEMENTATION](docs/IMPLEMENTATION.md) | PRD 与代码/测试对照、里程碑状态 |
+| [OPERATIONS](docs/OPERATIONS.md) | 本地配置、运行、恢复和卸载说明 |
+| [API](docs/API.md) | 工具、路由、状态、存储和生命周期约定 |
+| [NATIVE-LINKS](docs/NATIVE-LINKS.md) | 父子会话跳转和完成卡片边界 |
+| [ACCEPTANCE](docs/ACCEPTANCE.md) | 验证证据、产物和已知缺口 |
+| [DEMO](docs/DEMO.md) | 已核对的工具参数示例 |
+| [兼容记录](docs/compatibility.md) | 实测 Host/运行时兼容性说明 |
+| [协作约定](AGENTS.md) | 实施与协作规则 |
 
-## Status
+## 状态
 
-The project is under active local development. It has no npm publication, public deployment, or declared license yet.
+项目处于活跃的本地开发阶段，尚未发布到 npm、未公开部署，也尚未声明许可证。
