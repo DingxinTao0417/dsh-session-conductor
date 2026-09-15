@@ -1,0 +1,15 @@
+# dsh-session-conductor — bundle patch layer.
+#
+# Installing this package into a profile
+# (`dsh plugin --profile <name> add <path-to-this-directory>`) appends it to
+# `dsh.profile.bundles`; this patch is then applied as that bundle's layer.
+# The single row below loads the package's main entry as the host half (a
+# plain Cordis plugin). Because the package also declares `dsh.client`, the
+# web app loads its `./client` bundle as the browser half.
+#
+# The `config` block is intentionally absent: every setting has a documented
+# default in the PRD (§四.7) and users override rows from the profile's own
+# `cordis.patch.yml` when they need to change one.
+- insert:
+    - id: dsh-session-conductor
+      name: dsh-session-conductor

@@ -1,0 +1,2 @@
+# Keep repository text portable across development environments.
+* text=auto eol=lf

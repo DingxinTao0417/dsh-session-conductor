@@ -1,0 +1,28 @@
+# Build output
+/lib/
+/client/
+/node_modules/
+/.pnpm-store/
+*.tsbuildinfo
+
+# Local verification scratch space
+/.verification/
+/dist/
+/.verify/
+/.tmp/
+*.log
+
+# Test and local configuration output
+/coverage/
+/playwright-report/
+/test-results/
+.env
+.env.*
+!.env.example
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
