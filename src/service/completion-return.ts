@@ -345,7 +345,7 @@ function terminalOf(
 function publicPreviewOf(initial: InitialTurn, endSeq: number, events: readonly SessionEventLike[]): string | undefined {
   let preview: string | undefined
   for (const event of events) {
-    if (event.seq <= initial.startSeq || event.seq > endSeq || event.type !== 'assistant/message') continue
+    if (event.seq <= Math.max(initial.startSeq, initial.messageSeq) || event.seq > endSeq || event.type !== 'assistant/message') continue
     if (turnOf(event) !== initial.turn) continue
     const text = publicAssistantText(event)
     if (text.length > 0) preview = truncatePreview(text)

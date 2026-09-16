@@ -24,7 +24,7 @@
 ## 3. 实施顺序与宿主兼容
 
 - 从 PRD 的 M0 开始：先验证可安装的外部插件、Host 服务、Remote/有限 HTTP 适配与原生聊天跳转的完整闭环。
-- 当前交互以 PRD 2.5 / T33—T37 为准：`src/client-navigation.ts` 是构建入口，不挂载面板；默认任务继承发起会话的实际目录/已有 workspace，主会话指定的名称同步宿主显式标题。用户当前请求明确查询已授权任务进度时，优先 `conductor_read({view:"history"})`，让公开历史正文直接进入发起会话；不得为此要求目标写报告。T36 规定：成功 `create` / `fork` 后，主会话默认只呈现创建结果和跳转并停止，绝不重复目标工作，也不自动 `read`、`wait`、`watch`、`send`、`stop`、监控、汇总、比较、复核或验证；仅当用户在当前请求明确要求主会话参与、并行、监控、汇总、比较、复核或验证时才执行该范围。`0.1.6` 源码候选的 T37 是唯一窄例外：仅 create/fork 的 `instruction` 是长度大于 0 的字符串时，准确初始 relay `messageId` 持久化并写入 `armedAt` 后，承载该 relay 的首个委派 turn 终态可无模型地一次性更新原父创建卡片。它只显示 `returned` 或 `delivery_failed`，不唤醒父模型、不写父消息、不消费游标，也不自动调用任何 read/wait/watch/send/stop/summary/verify；5 秒内部对账与 1 秒卡片刷新也不是监控。持续监控仍须用户在当前请求明确要求并使用 `watch`。T36 已在 `0.1.5` 的 `src/tools.ts` 和 `tests/create-delegation.spec.ts` 中实现，并经 `npm run check`（79 文件 / 1,200 项）、lint、smoke、干净包真实 Host/Edge 4 场景和官方离线 CLI 的 `desktop` Profile 链接验证。T37 在全部当前源码变更后也已通过本地 `npm run check`（82 文件 / 1,236 项）、lint 与 smoke；官方离线 CLI 已将干净 27 文件候选（SHA-256 `6640c35d28ec9aca2254e088fd0d65e6f6b1c59b8e1048eb2bb26f4ee9a64648`）链接到本机 `desktop` Profile，收据见 `.verification/desktop-install-2026-09-15-completion-return/installation-completion-return.json`。这只证明本地 Profile 链接，不证明 GUI 已加载、真实 Host/Edge、冷/重启行为或最终完整验证；不得把用户尚未确认的窗口加载写成已完成。`0.1.4` 不包含 T36。`src/client.ts` 和 `src/client/` 是停用的历史面板实现，不作为产品入口。
+- 当前交互以 PRD 2.11 / T33—T46 和 docs/CONVERSATION-OVERVIEW.md 为准。`src/client-navigation.ts` 保留聊天内双向跳转，通过原生 additive header 插槽挂载常驻概览卡和插件自有工作区；没有关闭按钮，Escape/外部点击不关闭，旧版收起偏好不生效。可操作资源整行高亮并可点击，输出/来源标题打开工作区集合；宽屏工作区默认约占排除左侧导航后的会话可用宽度 70%，聊天约 30%，聊天/工作区最小 320/300 CSS px，支持分隔拖动、左右键和 Home 复位及手动比例记忆；小于 740 CSS px 时使用避开 Desktop 顶栏的全宽抽屉。打开自有工作区或资源预览时隐藏概览，关闭恢复；原生工具详情按只读兼容探测到的实际可见性隐藏概览并在关闭后恢复。原生 details 宽度仍由 Host 管理（Desktop 2.0.3 已验证 300—520 CSS px），不得伪造公开宽度 API。仅在兼容回退或工具详情入口临时注册原生 details，切会话、插槽移除和卸载时释放并恢复官方详情，不改写 root、宿主方法、输入框或 ASAR。使用真实 `useSession(selector)` 契约、宿主图标与主题。可见侧栏开关位于 `conversation.session.header.utilities` 的 `Session log` 右侧；宽屏概览卡在主会话 owner 正常文档流中右对齐，聊天滚动区保持全宽且滚动条位于主界面最右侧，不得再用绝对定位或为概览预留右侧 padding。新任务默认继承主会话目录/工作区并使用其指定标题。T36 默认委派即止保持有效；T37/T39 只做无模型对账，首页与预览也不自动 read/wait/watch/send/stop/summary/verify。显式 UserUI 操作复用现有服务权限。0.2.2 修复窄屏正常流占位与 Desktop 定位容器偏移；冷持久会话只经正式元数据取得只读概览和预览凭据，不恢复 Agent，协调写仍要求 live Agent。T43 的侧栏首页为输出、来源、网页预览、当前会话工作区 PTY 终端和工具详情；T44 从概览卡进入原生子智能体目录，不把它伪装为首页入口；T45 的子智能体与资源预览复用自有工作区但保持原生跳转语义。T44 只用正式 `sessions.list` 和 `refreshSubagents(parentId)` 显示当前父会话的直系原生子智能体，与 Conductor“委派任务”单独分区；`running`、`inactive` 和不可用只表示目录状态，`inactive` 或 `SessionSummary.completed` 未读提醒绝不称为成功。累计时间只取正式 `subagentTiming`，缺失不猜测；右侧每组首屏 10 条、每次再显示 30 条。相同父会话的视图共享 5 秒刷新租约，最后订阅者释放；不得调用共享布尔 `setSubagentCatalogOpen`。跳转前重新核验 parent/child/mode 的直系目录关系，再调用准确的 `openSubagent`；缺能力或记录不可用时明确提示，不降级为普通 `sessions.open`。目录不读取子历史、私有缓存或 Session 日志，不恢复 Agent，不启动模型、发送消息或安排模型监控。`0.2.3`、`0.2.4` 和 `0.2.5` 的本机 Profile 记录是历史；`0.2.6 / T46` 源码、隔离 Host/browser、候选包和本机安装必须分别记录，不能复用历史版本的验证或安装结论。源码与隔离验证记录见 docs/ACCEPTANCE.md；本机安装与实际窗口加载状态见 docs/DESKTOP-TRYOUT.md。
 - M0 必须覆盖安装后的创建、配置、分叉、发送、观察、停止与卸载；不能用宿主内部示例代替外部包验收。
 - 两项 Host 兼容扩展单独管理、测试与版本化，不自动修改用户已安装的 Harness。
 - 第一项为 `selectModel.rememberAsDefault?: boolean`：保持宿主默认行为，插件固定传 `false`。
@@ -87,12 +87,30 @@
 
 ## 8. 测试、文档与交付
 
-- 每项实现标明对应 PRD T01—T37 与里程碑；未实现、未测试、已通过分别记录，不用概述代替验收。
+- 每项实现标明对应 PRD T01—T44 与里程碑；未实现、未测试、已通过分别记录，不用概述代替验收。
 - 缺陷修复优先复现或建立失败测试，再验证根因；运行与改动风险相称的定向、回归和差异检查。
 - Host 语义使用真实集成测试，恢复与并发使用故障注入，界面使用多标签 E2E，安装生命周期单独验证。
 - T37 至少测试非空 initial `instruction`、relay 持久化后带 `armedAt` 的准确消息／首轮匹配、四种 `returned` 终态文案与 `delivery_failed` 文案、非终态不显示、detail/reason 240 与 preview 480 UTF-16 code units（含 `… [truncated]`）、无父模型／消息／工具／游标副作用、后续轮次忽略、原父 `mayRead` 失效隐藏、冷历史与重启恢复、重复事件幂等、卡片 capability 不进入 URL/内容且 HTTP 投影重复验证 operation/task/message/非空 instruction/guard bindingVersion/初始 Binding 关系，以及原父卡片隔离。当前源码候选的最终完整验证、Host/Edge／包／Desktop 验证完成前，保持“最终验证待完成”状态。
+- T44 至少验证：只列当前父会话的直系目录且不递归；`running`、`inactive`、空目录、损坏记录、父目录不可用和缺能力状态分开投影；不得把 `inactive` 或 `SessionSummary.completed` 未读提醒说成成功；累计时间只取 `subagentTiming`；每组初始 10 条、随后每次 30 条；同父共享刷新租约、切会话和最后订阅者卸载后不接受迟到结果；点击时重新核验 `parentSessionId + childSessionId + mode` 并调用 `openSubagent`；右侧 details 生命周期恢复。目录读取不得调用 `setSubagentCatalogOpen`、子历史、Agent 恢复、模型、消息或 watch；用户点击后的原生历史加载由宿主负责。源码验证、候选包核验、Profile 安装和实际 Desktop 窗口加载分别记录，不混称已完成。
 - 兼容矩阵覆盖 Windows、Linux；阶段 C 增加 Linux 远程 Host。未实测的平台明确标记。
 - 不为低影响文案改动堆砌测试；只在新改动、失败或未解决风险出现时扩大或重复测试。
 - README 的中文与英文在状态、安装、范围、入口和限制上同步；PRD 更改同步更新相关摘要及验收记录。
 - 最终报告说明修改、证据、对应验收、已知限制、运行与 Git 状态，以及保留的资源和下一步。
 - 明确区分本地完成、已提交、已推送、已部署或发布；不把文档计划、源码审阅或目标指标当成运行证明。
+
+## 9. 概览与独立回执
+
+- 原 Task CompletionReturn 不被后续 send 覆盖；Operation.completionReturn 与 overviewReadAt 均为兼容可选字段，旧操作不猜测回填。
+- 同轮补充指令的结果须位于 max(startSeq, messageSeq) 之后；读取或对账 I/O 前后复查原派发者 mayRead、准确 Binding 与消息关系。
+- 概览 GET 不读取目标历史；查看结果必须由用户点击，结果上限 24,000 UTF-16 code units 并提示截断；不消费模型 history/wait/report 游标。
+- 记录已读只影响对应操作回执，不清除真实待介入状态。UserUI 凭据仅存内存，最后订阅卸载时取消计时器与请求。
+- 目录相同不等于文件冲突；登记成果不等于存在性验证或用户验收。远程文件路径不交给本机打开。
+- README、PRD、概览规格和设计验收同步区分本批已实现能力与后续路线；发布/安装仍为独立阶段。
+- T42 文件预览仅接受经 UserUI token 解析的 reader，目标为当前或已授权本机会话；使用 Host fs.resolve/contains 验证工作区与真实文件身份，禁止用展示路径或字符串前缀代替 canonical containment。拒绝越界/符号链接逃逸、目录、二进制和大于 512 KiB 的文件，显示最多 200,000 UTF-16 代码单元且标记截断。
+- 文件读取和最后 metadata I/O 之后复查 token、读取权、绑定、cwd、provider 生命周期与文件身份/版本；最终权限核验后到响应发送不再异步让出。Cordis 每次 get 可产生新代理，须在 fs 注入生命周期中捕获稳定代理并在卸载时拒绝旧请求，不能把代理引用变化直接误判成服务更换。
+- 图片附件使用正式 session.readAttachment，不读取私有缓存，也不按附件文件名猜路径；切换/卸载释放 Blob URL。Markdown 原始 HTML 作为文本；网页预览为带地址栏、刷新和会话内前进/后退的受限 iframe，保留外部打开入口，不宣称完整内置浏览器，不绕过站点嵌入限制。
+- 原生 details 为已占用的 single 插槽，无公开工具选择或 layout 关闭订阅；不得永久抢占或劫持宿主方法来假装联动。T43 允许显式打开 WorkspaceHome 时临时占位，不再仅限内容预览；首页、集合、预览复用注册，关闭、工具详情入口、切会话和卸载均释放。概览常驻与右侧栏可关闭是两个独立行为。
+- T43 的首页提供真实输出文件、来源、网页 URL 表单、当前会话工作区目录启动的 Host PTY 终端，以及恢复官方工具详情；资源预览工具栏可返回首页。关闭侧栏不能关闭概览，打开首页不启动模型、发送消息或派发协调工具。T44 子智能体目录从概览卡进入，不把终端或子智能体伪装成额外首页能力之外的假入口。T45 将首页和资源预览放入插件自有宽工作区，打开时隐藏概览，关闭后恢复，并保留原生工具详情的显式恢复入口。侧边聊天、Git 审查、完整文件树或 fileReferences 搜索仍未接入，不增加假入口，不通过私有 DOM/宿主方法劫持来模拟能力。终端只在 `ctx.subprocess.spawnTerminal` 可用时打开真实 shell，默认 cwd 为当前会话工作区，缺能力时说明原因。
+- T43 侧栏入口按会话容器宽度保证可达：因长标题或窗口缩小使标题栏入口超出当前会话可视边界时隐藏标题栏按钮，在概览卡顶部右侧显示同一入口；其余宽度保留标题栏入口。验证长标题、长来源及 390 CSS px 窗口，不能依赖已被宿主标题栏挤出的按钮；窄屏抽屉避开 Desktop 36 px 顶栏，关闭不影响概览常驻。
+- T44 子智能体目录复用 T43 的临时 details 生命周期和窄屏抽屉，但不控制宿主原生子智能体菜单。目录同父 5 秒读取只是 UI 数据刷新，不是模型监控；最后订阅者、会话切换和插件卸载都必须释放租约并拒绝迟到结果。
+- 接口缺失 HTTP 404 要说明可能的前后端版本不一致，要求完整退出 Desktop（含托盘）后正常重开；与文件不存在的 FILE_NOT_FOUND 区分。确认已安装包、前端已刷新和 Host 已重启是不同事实。

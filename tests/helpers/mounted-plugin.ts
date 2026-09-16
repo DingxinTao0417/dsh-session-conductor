@@ -4,6 +4,7 @@ import { DEFAULTS, IMPLEMENTATION_DEFAULTS } from '../../src/domain/defaults.ts'
 import { createInMemoryTables } from '../../src/store/memory.ts'
 import { ConductorStore } from '../../src/store/repository.ts'
 import type { ToolDefinition } from '@deepseek-ai/dsh-tools'
+import { Context } from '@deepseek-ai/cordis'
 
 /** Mount the actual production entry and registered tools; only Host services are doubles. */
 export async function mountedPlugin(extra: Record<string, unknown> = {}, declared = false,
@@ -11,7 +12,6 @@ export async function mountedPlugin(extra: Record<string, unknown> = {}, declare
   const tables = createInMemoryTables()
   const store = new ConductorStore(tables, () => new Date().toISOString())
   const tools = new Map<string, ToolDefinition>()
-  const effects: (() => unknown)[] = []
   const services: Record<string, unknown> = {
     agents: { get: () => undefined, list: () => [] },
     tools: { register: (definition: ToolDefinition) => {
@@ -29,10 +29,11 @@ export async function mountedPlugin(extra: Record<string, unknown> = {}, declare
     ...configOverrides,
   }
   await beforeMount?.(store)
-  apply({ get: (name: string) => services[name], effect: (callback: () => unknown) => {
-    const dispose = callback()
-    if (typeof dispose === 'function') effects.push(dispose as () => unknown)
-  } } as never, config)
+  // Use the Host's real service scopes so optional inject callbacks wait for
+  // their providers and scoped effects are disposed with the owning context.
+  const context = new Context()
+  for (const [name, service] of Object.entries(services)) context.provide(name, service)
+  apply(context, config)
   // Storage mount and recovery use asynchronous steps, but no elapsed-time delay is needed.
   for (let i = 0; i < 20; i++) await Promise.resolve()
   if (store.getTask('target') === undefined) {
@@ -47,12 +48,12 @@ export async function mountedPlugin(extra: Record<string, unknown> = {}, declare
     version: 1, cwd: 'D:/target', createdAt: '2026-09-14T00:00:00Z'})
   }
   return {
-    store, services, tools,
+    store, services, tools, context,
     call: async (name: string, args: object, caller = 'owner') => {
       const tool = tools.get(name)
       if (tool === undefined) throw new Error(`Missing tool ${name}`)
       return await tool.execute(args as never, { agent: { id: caller }, callId: `${name}-test` } as never) as Record<string, unknown>
     },
-    close: async () => { for (const dispose of effects.reverse()) await dispose() },
+    close: async () => { await context.fiber.dispose() },
   }
 }

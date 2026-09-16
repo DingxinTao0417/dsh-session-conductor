@@ -1,6 +1,70 @@
 # 本地验收与交付记录
 
-更新日期：2026-09-15。状态为**本地实现与隔离验证，未提交、未发布、未部署**。本报告记录当前可核验结果；PRD 的全部功能标准以 [PRD 2.5](PRD.md) 为准，逐项代码/测试映射见 [IMPLEMENTATION](IMPLEMENTATION.md)。不同证据层级不相互替代。
+# 0.2.6 / T46：侧栏开关顺序与概览主界面归属
+
+源码验证已通过 `npm run check`（97 个测试文件 / 1,407 项测试）、`npm run lint` 与 Host/client/companion smoke。T46 将可见侧栏开关注入宿主公开的 `conversation.session.header.utilities` 列表并保持高顺序，使其紧跟 `Session log`；零尺寸 `WorkspacePreview` 锚点仍保留在 `conversation.session.header.actions`。`SessionOverviewCard` 宽屏不再使用绝对定位或为概览预留右侧 padding，而是在主会话 owner 的正常文档流中右对齐占位。
+
+隔离 Desktop 2.0.3 Host/browser（当前源码候选、离线适配器、无模型调用）实测 1920×1000：Header utilities 中 `Session log` 位于 x=1741…1852，插件开关位于 x=1860…1892；聊天滚动区 x=280…1920、width=1640，滚动条位于主界面最右侧 x≈1912…1920；概览卡位于 y=120…707、x=1574…1904，不再出现在滚动条之外。证据：`.verification/overview-2026-09-16T03-03-28-659Z/layout-t46-installed-verification.json` 与同目录 `host.log`（0.2.6 mounted）。
+
+0.2.6 候选包已封存并通过官方离线 CLI 安装到本机 `desktop` Profile：收据 `.verification/desktop-install-2026-09-15-t46/installation-t46.json`，归档为 `dist/0.2.6-local-t46/dsh-session-conductor-0.2.6.tgz`（35 文件，SHA-256 `57cf8b904bef9014fd0f114e300f4044908bf9eff743631136fb4824cd64de72`），安装链接指向 `D:/dsh-local-plugins/dsh-session-conductor/0.2.6-20260915-t46/package`。安装时没有停止正在运行的 Desktop，因此当前窗口仍持有 0.2.5 模块图；**用户完整退出 Desktop（含托盘进程）并重新打开后的实际窗口加载确认仍待完成**，该确认完成前不把隔离浏览器结果表述为用户当前窗口已加载 0.2.6。
+
+# 0.2.5 / T45：Codex 类宽工作区与概览层级
+
+源码验证已通过 `npm run check`（97 个测试文件 / 1,407 项测试）、`npm run lint` 和三类 smoke。新增自有工作区 surface 与只读原生详情可见性适配器：宽屏以排除左侧导航的会话可用区域默认分配工作区约 70%、聊天约 30%，最小宽度为工作区 300 CSS px、聊天 320 CSS px；支持分隔条拖动、左右方向键、Home 复位和本机比例记忆。可用宽度小于 740 CSS px 时切换为避开 Desktop 顶栏的全宽抽屉。
+
+隔离 Desktop 2.0.3 Host/browser 运行目录 `.verification/overview-2026-09-16T02-03-01-333Z/` 已验证：1920×1000 会话容器 1,640px、工作区 1,148px（70%）；1280×900 会话容器 1,000px、工作区 680px，聊天保留 320px；390×844 抽屉为 x=0、y=36、width=390、height=808，页面无横向溢出。打开工作区、文件、来源和子智能体时概览卡 `display:none`，关闭后恢复；打开原生工具详情时只读结构探测发布实际可见性并隐藏概览，关闭后恢复。资源切换保留比例，Home 恢复 70%，切会话、插槽移除和卸载清除自有 DOM、监听器、CSS 变量、注册和占位。聊天正文、标题栏和输入框保持可操作；无模型调用、无 ASAR 修改。
+
+以上是源码和隔离 Host/browser 结论。0.2.5 候选包已封存，官方离线 CLI 已按收据安装到 desktop Profile，归档哈希、安装路径和回滚脚本见 `DESKTOP-TRYOUT.md`；目前只剩用户将 DSH Desktop（含托盘进程）完整退出并重新打开后的原生窗口加载确认。该确认完成前，不把隔离浏览器结果表述为用户当前窗口已加载 0.2.5。
+
+## 0.2.4 / T44：原生子智能体概览
+
+95 个测试文件 / 1,386 项测试、typecheck/build/lint/Host-client-companion smoke 通过，日志 `.verification/subagents-024-{check,lint,smoke}-final.log`。新增目录投影与 UI 回归覆盖标签优先、冷父成功空目录、running 累计时间、inactive 非成功语义、目录失败、诊断项、精确地址跳转、5 秒共享租约、隐藏页面暂停、退订和迟到响应隔离，以及每组 10 条后分批 30 条。
+
+实际 Desktop 2.0.3 Host、隔离 Profile、正式 spawn provider 与离线适配器生成 2 个运行中原生子智能体（one-shot / continuable）、1 个已结束 one-shot 和 1 个诊断记录。证据 `.verification/overview-2026-09-16T01-47-44-377Z/native-subagents-verification.json`。浏览器验证标签、分组、累计时长更新、不可用项禁用、可继续子会话原生跳转、父会话返回、返回侧栏首页、键盘打开、390×844 抽屉避开顶部 36 px、1920×1000 宽屏概览与侧栏并列。已结束子会话历史跳转另见同版本首次 run `.verification/overview-2026-09-16T01-45-06-446Z/`，后续仅修正响应式样式。
+
+浏览器检查发现中等宽度四列过挤及长任务名称溢出，修正为按会话容器 ≥900 px 四列、620—899 px 两列、<620 px 单列，≥1080 px 使用原有独立概览定位。最终视图无重叠；源码中不编造子智能体进度文字或完成时间。状态仅“运行中 / 已结束或空闲”，不宣称 inactive 已成功。安装及实际用户窗口加载状态仍独立记录在 DESKTOP-TRYOUT.md。
+
+## 0.2.3 / T43：独立右侧栏入口
+
+93文件 / 1,352项测试、typecheck/build/lint/Host-client-companion smoke通过，日志 `.verification/sidebar-023-{check,lint,smoke}-final.log`。真实Host与Desktop容器仿真完成首页开关、集合/文件预览、返回首页、网页输入校验、轮询保留表单、工具详情恢复、会话切换及390px入口可达性验证。证据 `.verification/overview-2026-09-16T01-13-20-243Z/`，详见根目录design-qa.md。未增加模型调用，侧边聊天/内嵌终端/完整文件树/Git工作树审查不在已实现范围。安装状态独立见DESKTOP-TRYOUT。
+
+## 0.2.2：Desktop 小窗口定位与冷会话只读鉴权
+
+check通过91文件 / 1,339项测试，lint和Host/client/companion smoke通过，日志为 `.verification/overview-022-{check,lint,smoke}-final.log`。本次新增25项测试，覆盖冷会话凭据、正式元数据变更、异步预览权限与服务生命周期、窄屏抽屉边界及清理。
+
+真实Host、隔离Profile、离线适配器下模拟实际ASAR的36px标题栏与transformed根容器，复现旧0.2.1在1199×798遮挡28px。新正常流概览与正文间距12px；验证长标题、114条来源、缩放断点、宽屏原生预览、390px窄屏抽屉和父子切换清理。详细边界、截图和证据见根目录 `design-qa.md`。此前0.2.1普通浏览器布局检查不覆盖该Desktop容器缺陷，本节补充修正。
+
+冷持久会话通过正式metadata取得只读凭据，不恢复Agent；协调写仍要求live Agent。同源和loopback限制保留。截图具体403请求未经捕获，此处确认的是建立失败测试并修复的冷会话代码路径，不把所有403都归为相同原因。
+
+安装与用户原生窗口重开确认分开记录在 `DESKTOP-TRYOUT.md`。以下为历史版本证据。
+
+## 0.2.1：常驻概览、原生右侧预览与404诊断
+
+本轮90个测试文件 / 1,314项测试全部通过，含真实Cordis注入生命周期与filesystem provider变更、文件权限/目录/绑定/身份竞态、缺失Host接口的实际HTTP回归、预览slot释放及Markdown安全解析。源码/测试typecheck、所有产物构建、lint与Host/client/companion smoke通过。日志：`.verification/overview-021-check-final.log`、`overview-021-lint-final.log`、`overview-021-smoke-fixed.log`。
+
+真实Host/browser证据在 `.verification/overview-2026-09-16T00-32-51-693Z/`，含默认常驻、整行高亮、文件Markdown与原文、输出/来源集合、切会话释放、宽/紧凑/窄屏布局。详见根目录 `design-qa.md`。测试未改写用户会话，未调用外部模型，隔离Host和浏览器已关闭。
+
+404根因已确认：用户Desktop Host进程启动于本地15:54:33，早于17:05:13安装0.2.0；现有panel接口存在，而overview/result路由不存在。前端刷新后加载新资产，后台仍持有旧模块图。证据 `.verification/desktop-overview-route-mismatch.json`。新版对此给出完整退出/重开的明确说明，不把真实文件不存在的404误诊为旧Host。
+
+0.2.1本地安装状态在下方安装收据追加节及 `DESKTOP-TRYOUT.md` 记录；本节代码与隔离运行验收本身不等于用户原生窗口已重启加载。
+
+
+更新日期：2026-09-15。状态为**本地实现、隔离验证与本机 Profile 链接完成，用户 Desktop 重开确认待完成；未提交、未发布、未公开部署**。本报告记录当前可核验结果；PRD 的全部功能标准以 [PRD 2.10](PRD.md) 为准，逐项代码/测试映射见 [IMPLEMENTATION](IMPLEMENTATION.md)。不同证据层级不相互替代。以下 0.2.0 及更早内容均为历史版本证据。
+
+## 0.2.0：会话概览卡与独立回执（T38—T41，本地候选）
+
+- 当前源码通过 check（85 个测试文件 / 1,254 项）、lint、smoke。新增测试覆盖消息消费边界、独立回执、授权与 I/O 竞态、已读隔离、来源过滤、订阅清理、真实 selector hook 契约和成果产出会话关系。
+- 最终源码检查日志为 `.verification/overview-delivery-{check,lint,smoke}.log`；编码、相对链接、PRD 原章节与 T01—T41 完整性核对见 `.verification/overview-delivery-integrity.json`。本地候选包为 `dist/0.2.0-local-overview/dsh-session-conductor-0.2.0.tgz`，打包清单与 SHA-256 记录在 `.verification/overview-delivery.json`，不包含隔离运行数据或测试凭据。
+- 干净外部包在本机 Desktop 内置 Host 运行时的隔离 Profile 中运行；scripts/overview-host-probe.mjs 使用离线确定性适配器实际执行两轮 child 工作，断言父会话仍只有一轮、子会话继承目录/工作区、providerCalls=2。这是 Host 执行集成验证，不是外部模型能力测试。
+- Codex 内置浏览器实测默认收起、三分区、准确首次和追加结果、单条已读、模板创建与父命名、监控开关、双向导航、刷新、Escape 焦点恢复和 390 px 卡片边界。浏览器证据与修复迭代见根目录 design-qa.md；本轮不是 Edge 自动化测试。
+- UI 实测暴露 selector 参数遗漏，已改为 useSession(selector) 并补回归；测试夹具的 assistant 消息缺少公开 source 也已修复。交互改进包含长目录换行、打开表单/结果时滚动和聚焦。
+- 初次开发验证没有修改正式 Profile；用户反馈 Desktop 看不到概览卡后，核实其仍链接 0.1.6，再通过官方离线 CLI 升级为 0.2.0。收据为 `.verification/desktop-install-2026-09-15-overview/installation-overview.json`：仅 conductor dependency 变化，bundle 列表和 Profile patch 未变，实际 junction、干净包哈希及三个组成项各一次均通过。没有停止或重启用户 Desktop，没有改写 ASAR，也没有提交或推送；现有进程不会因包链接更新自动证明已加载新版。
+- 安装目录为 `D:/dsh-local-plugins/dsh-session-conductor/0.2.0-20260915-overview/package`；备份及受保护回退脚本在 `D:/dsh/plugin-backups/session-conductor-20260915-overview/before-upgrade/`。旧 0.1.6 包保留。候选归档仍是安装前文档快照，不重打包或改写其已封存哈希。
+- 四轮隔离验证的 `cleanup.json` 均确认测试端口释放；最终截图保留在 `.verification/overview-2026-09-15T23-46-16-026Z/`，可携带的卡片截图为 `docs/assets/overview-card.png`。测试浏览器标签已关闭，验证目录作为本地证据保留。
+- 未实测 Linux、其他 Host 版本、当前用户完整 Desktop GUI 加载；真实进程崩溃期间的未终态恢复仍只有服务级测试，不能将本次浏览器刷新替代完整崩溃恢复验收。worktree 核心沿用既有测试，本轮 UI 仅验证选择与参数路径，没有在夹具中创建实际 Git 工作树。
+- 持续监控是显式操作；一次性父模型自动汇总、自定义模板、跨会话通知汇总和完整开发工具入口仍在路线图。见 CONVERSATION-OVERVIEW.md。
+
+下文是此前版本的历史证据；其中“待完成”等状态属于对应版本，不替代本节的当前状态。
 
 ### 0.1.6 源码候选：创建首轮结束的一次性卡片回传（T37，最终完整验证待完成）
 
@@ -139,3 +203,20 @@ Windows 为本轮控制端，构建/主测试 Node v26.5.0；实际 Host 的嵌�
 当前主包是本地 `0.1.5` 的干净外部包，位于 `D:/dsh-local-plugins/dsh-session-conductor/0.1.5-20260915-delegation-only/package`，已从无开发依赖的独立目录链接至 `desktop` Profile。最终归档 `dist/local-candidate-2026-09-15-delegation-only-final/dsh-session-conductor-0.1.5.tgz` 为 27 文件，SHA-256 `1ec3e4259a5bcd240de98eb4960fccf24208b5e779b4ba6408b4ff5ede04379f`，最终核对确认其与该干净包一致。安装关联、恢复、组合复核与回滚记录在 `.verification/desktop-install-2026-09-15/installation-delegation-only.json` 和 `.verification/desktop-install-2026-09-15/composition-delegation-only.json`；主包及两个独立配套包均使用文件白名单，不打包 node_modules、`.cache`、`.verification`、测试专用 Profile 或临时凭据。源码目录和本地证据保留，候选包不是公开 npm 发布。
 
 兼容测试三个 Host 已退出，43963 无监听；最终二进制 provider 候选测试两个 Host 已退出，summary 确认 62134 端口释放；主插件二进制入口 Host 的 summary 确认进程退出和 61884 端口释放。T35 的历史干净包 Host/Edge 验证已释放 59294；T36 的干净包 Host/Edge 验证已释放 53932，Edge 浏览器和临时服务器在 finally 中关闭。IPC/TLS 测试负责关闭端点、子进程与服务器并清理临时目录；最终 check/lint/smoke 和导航命令进程均已退出。已通过官方离线 CLI 修改用户选择的 `desktop` Profile 以链接 `0.1.5`，但没有改写 Desktop ASAR、现有会话、凭据或原插件源码，也没有初始化 Git、提交、推送、公开发布或部署；正在运行的 Desktop 未被强制停止，仍需完整退出（含托盘）并重新打开。
+
+## 0.2.1本机安装收据
+
+官方离线CLI已将 `desktop` Profile从0.2.0更新到0.2.1；包、归档、manifest逐文件hash完全一致，所有lib运行时文件与真实浏览器验证包逐字节一致。原依赖和bundle除目标conductor链接外未改变，cordis.patch.yml未变，官方dump配置中conductor、binary-files、compatible-api-gateway各一次。
+
+- 收据：`.verification/desktop-install-2026-09-15-preview/installation-preview.json`。
+- 归档：`dist/0.2.1-local-preview/dsh-session-conductor-0.2.1.tgz`，31文件，SHA-256 `1e4f1cbc648e500c90c281a647402322fd798a9591a39117129b79445151d3d2`。
+- 独立包：`D:/dsh-local-plugins/dsh-session-conductor/0.2.1-20260915-preview/package`。
+- 备份及受保护回滚：`D:/dsh/plugin-backups/session-conductor-20260915-preview/before-upgrade/rollback-preview-verified.ps1`。
+
+用户Desktop未被强制退出，新Host路由须完整退出含托盘并重开后加载。隔离测试50893、58761端口均已释放；浏览器标签关闭、viewport恢复。没有commit、push或公开发布。包中文档保留安装前快照，最终安装状态以本节及独立收据为准。
+
+真实Host冷会话补充验证：`.verification/overview-2026-09-16T01-04-02-389Z/cold-session-verification.json`。由正式AgentHandle自行创建并dispose隔离会话；bootstrap/overview/preview均200，协调写409 CONTROLLER_INACTIVE，Agent始终未恢复，离线providerCalls保持2、父turn保持1。测试Host已停止且端口释放。
+
+0.2.2已通过官方离线CLI安装到desktop Profile，收据 `.verification/desktop-install-2026-09-15-layout/installation-layout.json`；仅主插件依赖变更，其他依赖/bundle/patch不变，三个组成项各一次。用户Desktop未被停止，须完全退出重开；未commit/push/发布。安装包SHA和回滚见DESKTOP-TRYOUT。
+
+0.2.3已通过官方offline CLI安装到desktop Profile，收据 `.verification/desktop-install-2026-09-15-sidebar/installation-sidebar.json`。仅主依赖变化，其他依赖/bundle/patch保留，三个组成项各一次。未停止现有Desktop，需完整退出重开；隔离Host与端口已关闭，未提交或发布。

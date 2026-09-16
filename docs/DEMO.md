@@ -1,6 +1,6 @@
 # 多会话操作演示
 
-更新日期：2026-09-15。以下 JSON 是工具参数示例，字段已对照 `src/tools.ts`，不是会自动执行的脚本。`<taskId>`、路径、模型与操作 ID 均须替换成当前环境中的值；示例数字 `1`、`42` 只表示字段类型，不能代替真实读取结果。先按 [OPERATIONS](OPERATIONS.md) 配置隔离 profile，并调用 `conductor_capabilities` 确认实际能力。需要模型的操作可能使用所选 provider；本项目自动验收使用受控 provider，不发起模型网络请求。T36 已在本地 `0.1.5` 实现，并通过 `npm run check`（79 个测试文件 / 1,200 项测试）、lint、smoke、干净外部包真实 Host/Edge 4 场景和官方离线 CLI 的 `desktop` Profile 链接验证；尚未公开发布。现有 Desktop 进程须完整退出（含托盘）并重开后才会加载它，用户重启确认仍待完成。`0.1.4` 不包含此行为。
+更新日期：2026-09-15。以下 JSON 是工具参数示例，字段已对照 `src/tools.ts`，不是会自动执行的脚本。`<taskId>`、路径、模型与操作 ID 均须替换成当前环境中的值；示例数字 `1`、`42` 只表示字段类型，不能代替真实读取结果。先按 [OPERATIONS](OPERATIONS.md) 配置隔离 profile，并调用 `conductor_capabilities` 确认实际能力。需要模型的操作可能使用所选 provider；本项目自动验收使用受控 provider，不发起模型网络请求。当前源码为 0.2.6 / PRD 2.11，T46 的侧栏开关顺序与概览主界面归属、97 个测试文件 / 1,407 项测试、lint、smoke、隔离 Host/browser QA 和官方离线 CLI Profile 安装均已记录在 [ACCEPTANCE](ACCEPTANCE.md) 与 [DESKTOP-TRYOUT](DESKTOP-TRYOUT.md)。尚未公开发布；现有 Desktop 进程须完整退出（含托盘）并重开后才会加载新版 Host，用户窗口重开确认仍待完成。下文 T36 示例保留其版本语义。
 
 ## 1. 创建／分叉后默认委派即止（T36 已实现并完成安装前验证）
 

@@ -2,7 +2,7 @@
  * Load-side smoke test for the built host half.
  *
  * It imports `lib/index.js` the way the Host Loader does, then mounts `apply`
- * with a stand-in Cordis context and asserts the observable contract: which
+ * with a real Cordis context and doubled Host services, asserting which
  * tools appear, what the capability report says, that every disabled feature
  * carries a reason, and that the durable store opens or reports why it did not.
  *
@@ -12,6 +12,7 @@
 import assert from 'node:assert/strict'
 import { pathToFileURL } from 'node:url'
 import { resolve } from 'node:path'
+import { Context } from '@deepseek-ai/cordis'
 
 const entry = pathToFileURL(resolve('lib/index.js')).href
 const plugin = await import(entry)
@@ -57,28 +58,16 @@ const openedDomain = {
 /** Minimal stand-in for the Host tool registry and the services the probe reads. */
 const registered = []
 const unregistered = new Set()
-const effects = []
 const services = {
   tools: { register: definition => { registered.push(definition); return () => { unregistered.add(definition.name) } } },
   agents: { list: () => [] },
   sessionQuery: { listSessions: () => [] },
   storageDomain: { open: async () => openedDomain },
 }
-// Cordis exposes a service both as a context property and through
-// `ctx.get(name)`; the conductor looks everything up through `ctx.get` so that
-// a composition missing a service is a reported gap rather than a crash.
-const ctx = {
-  ...services,
-  get: name => services[name],
-  // Cordis's `effect` contract, faithfully: it CALLS the callback and registers what the callback
-  // *returns* as the disposer. Storing the callback itself would make this stand-in look like it
-  // had 29 owned registrations while none of them could actually be disposed, which is exactly the
-  // teardown leak this smoke now checks for.
-  effect: callback => {
-    const disposer = callback()
-    if (typeof disposer === 'function') effects.push(disposer)
-  },
-}
+// Native optional injection waits for absent services and owns each provider's
+// scope. The filesystem and settings services are deliberately unavailable.
+const ctx = new Context()
+for (const [name, service] of Object.entries(services)) ctx.provide(name, service)
 const config = {
   managedTargetLimit: 20,
   targetTurnConcurrency: 4,
@@ -112,7 +101,7 @@ assert.deepEqual(
     'conductor_workflow',
   ],
 )
-assert.ok(effects.length >= registered.length, 'registered tools must have context-owned teardown')
+assert.equal(unregistered.size, 0, 'mounted tools must stay registered until their context unloads')
 
 const capabilities = byName.get('conductor_capabilities')
 const value = await capabilities.execute({}, {})
@@ -145,13 +134,20 @@ assert.equal(listing.unavailableReason, undefined)
 
 // The mount report goes to stderr rather than through the Host logger, so a
 // missing logger cannot make "mounted" and "never loaded" look the same.
-assert.equal(ctx.logger, undefined, 'this stand-in deliberately has no Host logger')
+assert.equal(ctx.get('logger'), undefined, 'this composition deliberately has no Host logger')
 
 // A Host without a tool registry must still mount and report, not disappear.
 // An entry whose injections are unmet stays pending with no error at all, which
 // is exactly the failure mode this design avoids.
-const bareCtx = { get: () => undefined, effect: () => {}, inject: () => {} }
+const bareCtx = new Context()
 plugin.apply(bareCtx, config)
+const lateTools = new Map()
+bareCtx.provide('tools', { register: definition => {
+  lateTools.set(definition.name, definition)
+  return () => { lateTools.delete(definition.name) }
+} })
+await new Promise(resolve => setTimeout(resolve, 0))
+assert.deepEqual([...lateTools.keys()].sort(), [...byName.keys()].sort(), 'optional injection activates when the tool registry becomes available')
 
 // A declared action is a promise. `conductor_export` used to offer `publish`, `status` and `revoke`,
 // none of which its routing implemented — so asking it to publish silently performed an export.
@@ -192,15 +188,14 @@ assert.ok(byName.get('conductor_discover').parameters.properties.offset !== unde
 
 // Teardown, and the reason it is here: the conductor owns a self-rescheduling background pass
 // timer that it starts *after* the storage domain opens, so its disposer is registered later than
-// the 29 tool registrations. A mounted plugin whose timer could not be stopped would keep a Host's
-// event loop alive after teardown, so the disposers are run and the process is expected to exit on
+// the tool registrations. A mounted plugin whose timer could not be stopped would keep a Host's
+// event loop alive after teardown, so the native fiber unloads and the process is expected to exit on
 // its own — no `process.exit` here, because that would hide exactly the leak this checks for.
 await new Promise(resolve => setTimeout(resolve, 50))
-assert.ok(effects.length > 29, `the background pass registers its own disposer (got ${String(effects.length)})`)
-for (const dispose of effects.reverse()) {
-  if (typeof dispose === 'function') await dispose()
-}
+await ctx.fiber.dispose()
+await bareCtx.fiber.dispose()
 assert.deepEqual([...unregistered].sort(), [...byName.keys()].sort(), 'every mounted tool is unregistered on teardown')
+assert.equal(lateTools.size, 0, 'late-injected tools are also released with their owning context')
 assert.equal(domainClosed, true, 'the opened durable domain is closed on teardown')
 
 console.log('host-half smoke: OK')

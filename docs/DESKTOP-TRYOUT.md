@@ -1,5 +1,112 @@
 # 当前 Desktop 本地试用记录
 
+## 当前已安装 0.2.6：T46 侧栏开关与概览主界面归属
+
+2026-09-15 本地完成 0.2.6 / PRD 2.11 / T46 的源码检查、隔离 Host/browser 布局验证、候选包封存和本机 `desktop` Profile 离线安装。当前安装链接为 `D:/dsh-local-plugins/dsh-session-conductor/0.2.6-20260915-t46/package`，包 `package.json` SHA-256 为 `3f72fca88470a7ce8ae9a7b4d23d3d8eaaa6a7bbec42124bdb3ff6090e383e6f`；候选归档 `dist/0.2.6-local-t46/dsh-session-conductor-0.2.6.tgz` 共 35 个文件，SHA-256 为 `57cf8b904bef9014fd0f114e300f4044908bf9eff743631136fb4824cd64de72`。
+
+隔离 Desktop 2.0.3 Host/browser 在 1920×1000 会话中实测：侧栏开关位于 `conversation.session.header.utilities` 列表，`Session log` 右边（Session log x=1741…1852，开关 x=1860…1892）；概览卡位于主会话 owner 的正常文档流、宽屏右对齐（x=1574…1904，y=120…707），聊天滚动区保持会话容器全宽（x=280…1920、width=1640），滚动条位于主界面最右侧（x≈1912…1920），不再为概览预留右侧 padding。窄屏/长标题时仍使用概览顶部的可达回退入口，不显示两个开关。证据：`.verification/overview-2026-09-16T03-03-28-659Z/layout-t46-installed-verification.json`。
+
+本次安装收据为 `.verification/desktop-install-2026-09-15-t46/installation-t46.json`；仅 `dsh-session-conductor` dependency 变化，bundle 顺序和 `cordis.patch.yml` 不变，官方 `--dump-config` 中 `dsh-session-conductor`、`conductor-binary-files`、`conductor-compatible-api-gateway` 各出现一次。安装脚本未启动或停止 Desktop GUI；当前正在运行的窗口仍持有 0.2.5 模块图。**必须完整退出 DSH Desktop（包括托盘进程）再正常打开**，才能加载 0.2.6/T46；仅刷新页面不能证明后台 Host 已升级。
+
+- 候选包：`D:/dsh-local-plugins/dsh-session-conductor/0.2.6-20260915-t46/package`。
+- 归档：`dist/0.2.6-local-t46/dsh-session-conductor-0.2.6.tgz`。
+- 收据：`.verification/desktop-install-2026-09-15-t46/installation-t46.json`。
+- 回滚：`D:/dsh/plugin-backups/session-conductor-20260915-t46/before-upgrade/rollback-t46.ps1`；要求完整退出 Desktop，并核验当前 0.2.6 链接与包哈希后，通过官方 offline CLI 恢复 0.2.5，不直接覆盖 Profile。
+- 归档中的文档是安装前快照；本仓库文档在安装后追加了收据和实际加载待确认状态。不要修改已安装包目录，否则会使收据中的逐文件哈希失效。
+- 用户完整退出并重开后的实际窗口加载确认仍待完成。
+
+## 历史安装 0.2.5：Codex 类宽工作区
+
+源码和隔离 Desktop Host/browser 已验证插件自有宽工作区：在排除左侧导航的会话可用区域中默认约 70% 工作区 / 30% 聊天，聊天与工作区最小宽度分别为 320/300 CSS px；支持拖动、左右方向键、Home 复位和本机比例记忆。小于 740 CSS px 时使用避开 Desktop 顶栏的全宽抽屉。打开工作区、输出、来源、网页或子智能体预览时概览卡隐藏，关闭后恢复；选择原生工具详情时按实际可见性隐藏概览，关闭后恢复。
+
+隔离证据：`.verification/overview-2026-09-16T02-03-01-333Z/`，截图：[宽工作区](assets/wide-workspace.png)。1920×1000、1280×900 和 390×844 的几何、缩放、资源切换、键盘调整、原生详情恢复和无横向溢出均已核对；测试过程没有启动模型、修改用户会话或 ASAR。该结论覆盖隔离运行时；用户窗口仍须重开确认实际加载。
+
+已通过官方 Desktop CLI 离线更新本机 `desktop` Profile 至 0.2.5。仅主插件依赖变化，bundle 顺序和 `cordis.patch.yml` 保持不变，`dsh-session-conductor`、`conductor-binary-files` 与 `conductor-compatible-api-gateway` 各出现一次。候选归档包含 35 个文件，SHA-256 为 `1a020e0f3cf9eee229c99b028f6f455e2dda702c67a05f38ac68773c045ac520`；安装后的 junction 指向 `D:/dsh-local-plugins/dsh-session-conductor/0.2.5-20260915-wide-workspace/package`，包 `package.json` SHA-256 为 `57fe49462c0f523158cbb41560b80d3eb023d73dcc2481eaab79dce7aaaacfd3`。
+
+归档中的文档是安装前快照；本仓库文档在安装后追加了收据和实际加载待确认状态。不要修改已安装包目录，否则会使收据中的逐文件哈希失效。
+
+- 候选包：`D:/dsh-local-plugins/dsh-session-conductor/0.2.5-20260915-wide-workspace/package`。
+- 归档：`dist/0.2.5-local-wide-workspace/dsh-session-conductor-0.2.5.tgz`。
+- 收据：`.verification/desktop-install-2026-09-15-wide-workspace/installation-wide-workspace.json`。
+- 回滚：`D:/dsh/plugin-backups/session-conductor-20260915-wide-workspace/before-upgrade/rollback-wide-workspace-verified.ps1`；要求完整退出 Desktop，并核验当前 Profile、封存 0.2.4 包和 CLI 后才执行官方 offline add，不直接覆盖 Profile。
+
+安装脚本只在 Electron Node 模式调用官方 CLI，没有启动或停止 Desktop GUI；安装收据记录 `existingDesktopProcessesWereNotStopped: true`。安装后的进程复核仍看到 DSH Desktop 进程的启动时间早于该轮安装，因此该轮之后的窗口不能视为已加载 0.2.5。请完整退出 Desktop（包括托盘进程）再正常打开，才能让新版 Host 加载；仅刷新页面不能证明后台模块已更新。用户窗口重开确认仍待完成。
+
+## 历史安装 0.2.4：原生子智能体概览与侧栏
+
+已通过官方 Desktop CLI 离线更新本机 `desktop` Profile 至 0.2.4。仅主插件依赖变化，其他依赖、bundle 顺序及 patch 保持不变；三个组成项各出现一次。95 个文件 / 1,386 项测试、typecheck/build/lint/smoke 与真实 Host/browser 验证通过。安装包运行时文件与最终浏览器验证包逐字节一致。
+
+常驻概览新增“子智能体”，点击打开原生子智能体分组列表，显示名称、状态和可用的累计执行时间；点击健康条目打开原生会话，原生面包屑返回父会话。与 Conductor“委派任务”分区并存。宿主只有 running/inactive 状态，因此非运行显示“已结束 / 空闲”，不能当作成功完成；不编造进度摘要和完成时间。
+
+**完整退出 Desktop（包括托盘进程），再正常打开**才能加载更新。本次没有停止或重启正在使用的 Desktop，用户实际窗口重开确认仍待完成。封存包中文档是安装前快照，以当前仓库及独立安装收据为准。
+
+- 干净包：`D:/dsh-local-plugins/dsh-session-conductor/0.2.4-20260915-subagents/package`。
+- 归档：`dist/0.2.4-local-subagents/dsh-session-conductor-0.2.4.tgz`，34 个文件，SHA-256 `1b53df6b073276e8402ee8de63635f09aec2c87a81b8ce7c780145d78814f20f`。
+- 收据：`.verification/desktop-install-2026-09-15-subagents/installation-subagents.json`。
+- 回滚：`D:/dsh/plugin-backups/session-conductor-20260915-subagents/before-upgrade/rollback-subagents-verified.ps1`；要求完整退出 Desktop，并核验当前 Profile、封存 0.2.3 包与 CLI 后才执行官方 offline add，不直接覆盖 Profile。
+- 两轮 UI 测试均保持 5 次预设离线调用、父会话 1 轮；已结束子智能体未恢复 Agent。测试 Host、端口和浏览器已关闭，viewport 恢复；验证文件和旧包保留。用户会话及 Desktop ASAR 未修改，未提交、推送或发布。
+
+## 历史安装 0.2.3：独立右侧栏入口
+
+已通过官方Desktop CLI离线更新 `desktop` Profile 至0.2.3。仅主插件依赖变化，其他依赖、bundle顺序及patch不变，三个组成项各出现一次。93文件 / 1,352项测试、lint、smoke与真实Host/browser验证通过；安装包全部运行时文件与最终界面验证包逐字节一致。
+
+普通会话标题栏右侧新增侧栏按钮，点击打开工作区首页，可查看输出文件、来源、网页预览、工具详情；预览中可返回首页。若窗口缩小或长标题把入口挤出会话可视区域，入口移到概览卡顶部右侧。关闭侧栏保留概览。不启动模型任务；侧边聊天、内嵌终端、完整文件树和Git工作树审查尚未接入。
+
+**完整退出Desktop（包括托盘进程）再正常打开**才能加载更新。本次没有停止或重启正在使用的Desktop，实际用户窗口重开确认仍待完成；候选包中文档为安装前快照，以当前仓库及安装收据为准。
+
+- 干净包：`D:/dsh-local-plugins/dsh-session-conductor/0.2.3-20260915-sidebar/package`。
+- 归档：`dist/0.2.3-local-sidebar/dsh-session-conductor-0.2.3.tgz`，33文件，SHA-256 `d11d48499c97a1fc5d64703ec0e1199619ee3664f55a146f354a55726be03b2d`。
+- 收据：`.verification/desktop-install-2026-09-15-sidebar/installation-sidebar.json`。
+- 回滚：`D:/dsh/plugin-backups/session-conductor-20260915-sidebar/before-upgrade/rollback-layout-verified.ps1`，需完全退出Desktop，并校验当前Profile、封存0.2.2包和CLI才执行官方offline add；不直接覆盖Profile。
+- 用户会话及Desktop ASAR未修改；旧版本保留。测试Host、端口、浏览器均已关闭，viewport恢复。未commit、push或公开发布。
+
+## 历史安装0.2.2：小窗口与历史会话修复
+
+已通过官方Desktop CLI离线更新 `desktop` Profile 至0.2.2；其他依赖、bundle顺序及patch保持不变，三个组成项各出现一次。源码通过91文件 / 1,339项测试、lint、smoke，带Desktop兼容模式定位容器的隔离Host/browser回归和真实Host冷会话HTTP验证通过。
+
+修复窄窗口概览遮挡正文、极窄预览标题与关闭按钮被顶栏遮挡，以及冷历史会话只读鉴权。无需恢复Agent即可查看历史会话概览/预览；协调写仍要求活动Agent。截图具体403请求未经捕获，不把全部403都归为此原因。
+
+**完整退出Desktop（包括托盘进程）再正常打开**，才能加载新版Host。安装没有停止现有Desktop；单独刷新不代表后台已升级。候选包中文档是安装前快照，以本节及独立安装收据为准。
+
+- 安装目录：`D:/dsh-local-plugins/dsh-session-conductor/0.2.2-20260915-layout/package`。
+- 归档：`dist/0.2.2-local-layout/dsh-session-conductor-0.2.2.tgz`，32文件，SHA-256 `c82a3e42ddd97e9ae8ffdf4195aa516ad810f2a1e99af384b8fe4240d32e20db`；全部运行时产物与最终浏览器验证包一致。
+- 收据：`.verification/desktop-install-2026-09-15-layout/installation-layout.json`。
+- 备份与回滚：`D:/dsh/plugin-backups/session-conductor-20260915-layout/before-upgrade/rollback-layout-verified.ps1`。要求Desktop完全退出，校验当前Profile、封存0.2.1包与官方CLI后再执行offline add；不会直接覆盖Profile。
+- 保留旧包与本地验证证据；不修改ASAR或正式会话，不提交、推送或发布。测试Host、端口与浏览器标签均已关闭。
+
+## 历史安装0.2.1：常驻概览与右侧预览
+
+已通过官方Desktop CLI离线更新 `desktop` Profile，主包为0.2.1；其他依赖、bundle顺序及cordis.patch.yml保持原样，三个组成项各出现一次。源码、90文件 / 1,314项测试、lint、smoke和真实Host/browser验证已通过。安装收据为 `.verification/desktop-install-2026-09-15-preview/installation-preview.json`。用户Desktop进程没有被停止；实际窗口加载新版仍须完整退出重开。归档中的文档是安装前快照，以当前仓库本节及独立收据为准。
+
+升级后完整退出Desktop（含托盘）并重新打开。进入普通会话，概览默认显示且没有关闭按钮；可点击输出/来源标题打开右側列表，点击资源在原生右栏预览。宽度不足时概览排在聊天上方，避免遮挡正文；关闭预览不会关闭概览。
+
+本次404已核实为旧Host仍在运行：其启动早于0.2.0安装。只刷新页面会形成新前端配旧Host的状态；完整退出重开后才加载新接口。不需要删除Profile、会话或改写ASAR。
+
+- 干净包：`D:/dsh-local-plugins/dsh-session-conductor/0.2.1-20260915-preview/package`。
+- 本地归档：`dist/0.2.1-local-preview/dsh-session-conductor-0.2.1.tgz`，31文件，SHA-256 `1e4f1cbc648e500c90c281a647402322fd798a9591a39117129b79445151d3d2`。全部运行时文件与最终浏览器验证包逐字节一致。
+- 备份：`D:/dsh/plugin-backups/session-conductor-20260915-preview/before-upgrade`。
+- 正常安装后的回滚：该备份目录内 `rollback-preview-verified.ps1`，要求Desktop完全退出，并校验当前Profile、旧0.2.0包和CLI后才执行官方offline add；不会直接覆盖Profile。旧版本及原恢复证据保留。
+- 本轮未commit、push或发布，没有改动ASAR和用户会话；测试Host、浏览器与端口均已关闭。
+
+
+
+## 历史安装：0.2.0
+
+2026-09-15 已确认本机原来仍链接 0.1.6，因此没有“概览”入口。现已通过官方 Desktop CLI 的 `plugin --profile desktop add --offline` 将封存的 0.2.0 干净包链接到 `D:/dsh/profiles/desktop`。仅主插件依赖变化；其他依赖、bundle 顺序与 `cordis.patch.yml` 保持不变，官方 `--dump-config` 复核三个配套组成项各出现一次。
+
+1. 等待现有任务结束，正常退出 DSH Desktop，包括托盘中的后台进程，再正常打开。
+2. 打开任意普通会话，在**会话标题栏右侧点击“概览”**。入口不要求先创建子任务；卡片默认收起。
+3. 展开后可见输出内容、委派任务和来源。原聊天内创建卡片及返回发起会话保持可用。
+
+单独刷新窗口不能证明 Host 已切换新版；“进入恢复模式”会暂停 Profile 加载，也不会出现概览入口。本次安装没有停止或重启现有 Desktop，因此用户窗口实际加载确认仍待完成。
+
+- 独立安装目录：`D:/dsh-local-plugins/dsh-session-conductor/0.2.0-20260915-overview/package`，不含开发 node_modules。
+- 归档：`dist/0.2.0-local-overview/dsh-session-conductor-0.2.0.tgz`，SHA-256 为 `b034651aa464f39cfbba696beeca9eb97ce87af1eb654ffc5c67e5f533f3945c`。包中文档为安装前快照。
+- 收据：`.verification/desktop-install-2026-09-15-overview/installation-overview.json`。
+- 备份及回退：`D:/dsh/plugin-backups/session-conductor-20260915-overview/before-upgrade/rollback-overview.ps1`。旧 0.1.6 包保留；该脚本要求 Desktop 完全退出，并校验当前安装及旧包后，才通过官方离线 CLI 回退，不把备份直接覆盖到 Profile。
+
+## 历史试用记录：0.1.5
+
 日期：2026-09-15。DSH Session Conductor **0.1.5** 已通过官方 Desktop CLI 离线链接到这台机器的 **DSH Desktop 2.0.3 / `desktop` Profile**；两个伴随包保持 0.1.0，不是公开发布版本。安装收据为 `.verification/desktop-install-2026-09-15/installation-delegation-only.json`。PRD 2.4 的 T36 已在该版本实现，并通过 `npm run check`（79 个测试文件 / 1,200 项测试）、lint、smoke、干净外部包的真实 Host/Edge E2E，以及 Profile 的独立官方 dump 组合复核。当前正在运行的 Desktop 没有被停止，仍持有旧模块图；完整退出（含托盘）并正常重新打开后的用户试用确认仍待完成。
 
 0.1.0 的白屏问题已在 0.1.1 修复：声明 Cordis 服务依赖，使用零参数 slot 注入回调及 `register(options, component)` 的真实接口。0.1.2 改为聊天内创建卡片和来源返回链接，**不挂载浮动面板**；0.1.3 增加默认继承主工作区和主会话指定宿主名称；0.1.4 增加直接读取已授权子会话公开历史的进度路径，不再需要子会话为主会话另写报告文档。0.1.5 实现 T36：创建或分叉成功后，主会话默认只呈现创建结果并停止，不与目标重复工作，也不自动读取、等待、观察、发送、停止、监控、汇总、比较、复核或验证；仅用户在当前请求明确要求主会话参与、并行、监控、汇总、比较、复核或验证时例外。它已通过本地 check/lint/smoke、干净包、真实 Host/Edge 和 `desktop` Profile 链接验证。真实 Host/Edge 验证没有写入你的现有会话或调用模型；现有 Desktop 进程仍须完全退出并重开后才能由用户实际试用。

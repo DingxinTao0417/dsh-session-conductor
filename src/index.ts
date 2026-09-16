@@ -29,7 +29,7 @@ import { validateJsonSchemaValue, type ToolDefinition } from '@deepseek-ai/dsh-t
 import { RemotePanelFacts } from './domain/panel-remote.ts'
 import { taskObservationSchema } from './service/observation.ts'
 import { remoteHistoryCursor, persistRemoteHistoryCursor } from './service/remote-read-cursor.ts'
-import { createPanelController, type PanelAgents } from './service/panel-controller.ts'
+import { createPanelController, readPanelSessionMetadata, type PanelAgents } from './service/panel-controller.ts'
 import { explicitLocalUserInvocation } from './tools.ts'
 import { Config, type ConductorConfig } from './config.ts'
 import { automaticDispatchRefusal } from './service/dispatch-admission.ts'
@@ -154,6 +154,10 @@ import { applySelection, describeConfigState, modelListingNotes, modelSelectionW
 import type { SessionViewLike } from './service/observer.ts'
 import { PANEL_DETAIL_ROUTE, PANEL_ROUTE, panelStatusOf, registerPanelActionRoutes, registerPanelDetailRoute, registerPanelRoute, type PanelArtifactFact, type PanelBudgetFact, type PanelOperationFact, type PanelPayload, type PanelTaskDetail, type PanelTaskView, type WebRoutePort } from './service/panelapi.ts'
 import { registerSessionLinksRoute, sessionLinksOf } from './service/session-links.ts'
+import { reconcileFollowupReturns } from './service/followup-returns.ts'
+import { overviewOf, registerOverviewRoute, registerOverviewResultRoute } from './service/overview.ts'
+import { registerPreviewRoute, type PreviewContext } from './service/preview.ts'
+import { registerTerminalRoutes, type TerminalSubprocess } from './service/terminal.ts'
 import { resolveCompletionReturn, type CompletionReturnCallback } from './service/completion-return.ts'
 import { remoteAction } from './service/remote-actions.ts'
 import type { RemoteReadToolRequest, RemoteReadToolResult } from './tools.ts'
@@ -3785,6 +3789,13 @@ function mount(ctx: Context, config: ConductorConfig): void {
         return parts.join('; ')
       }
       parts.push(await runCompletionReturns())
+      if (store !== undefined) parts.push(await reconcileFollowupReturns({
+        store, active: () => lifecycle.active, localHostId: configOf().bridge?.hostId ?? 'local',
+        readEvents: async sessionId => {
+          const live = (probeContext.get('agents') as ObservableAgentsLike | undefined)?.get(sessionId)
+          return live?.session?.events ?? (await readPersistedSessionOf(sessionId)).events
+        },
+      }))
     } catch (error) {
       parts.push(`completion returns failed: ${describeError(error)}`)
     }
@@ -6818,12 +6829,83 @@ function mount(ctx: Context, config: ConductorConfig): void {
         } else announce(ctx,'[dsh-session-conductor] remote bridge requires Host agents, filesystem, workspace registry and durable sessions')
       }
       const unregisterDetail = registerPanelDetailRoute(webServer, taskId => panelDetailOf(opened, taskId))
+      const panelSessionMetadata = (sessionId: string) => readPanelSessionMetadata(probeContext.get('sessionQuery'), sessionId)
       const panelController = createPanelController({
         agents: () => probeContext.get('agents') as PanelAgents | undefined,
+        sessionMetadata: panelSessionMetadata,
         definitions: panelDefinitions, active: () => lifecycle.active,
         markUserInvocation: explicitLocalUserInvocation,
       })
       const unregisterActions = registerPanelActionRoutes(webServer, panelController)
+      const unregisterOverview = registerOverviewRoute(webServer, panelController, opened, sessionId =>
+        overviewOf(opened, sessionId, panelPayloadOf(opened).tasks, configOf().bridge?.hostId ?? 'local'))
+      if (unregisterOverview !== undefined) ctx.effect(() => unregisterOverview)
+      const unregisterOverviewResult = registerOverviewResultRoute(webServer, panelController,
+        sessionId => overviewOf(opened, sessionId, panelPayloadOf(opened).tasks, configOf().bridge?.hostId ?? 'local'),
+        async sessionId => {
+          const live = (probeContext.get('agents') as ObservableAgentsLike | undefined)?.get(sessionId)
+          return live?.session?.events ?? (await readPersistedSessionOf(sessionId)).events
+        })
+      if (unregisterOverviewResult !== undefined) ctx.effect(() => unregisterOverviewResult)
+      ctx.inject(['fs'], previewScope => {
+        // Cordis creates tracing proxies on each lookup. Pin one proxy to this
+        // provider lifetime, and invalidate in-flight reads when it is replaced.
+        const fs = previewScope.fs as PreviewContext['fs']
+        let active = true
+        const previewServices = {
+          async context(readerSessionId: string, targetSessionId: string) {
+            if (!active || typeof fs.resolve !== 'function' || typeof fs.contains !== 'function' || typeof fs.readBytes !== 'function') return undefined
+            const targetAgent = () => (probeContext.get('agents') as { get(id: string): { session: { header: { cwd?: string; createdAt?: number } } } | undefined } | undefined)?.get(targetSessionId)
+            const initialAgent = targetAgent()
+            if (readerSessionId === targetSessionId) {
+              const metadata = initialAgent === undefined ? await panelSessionMetadata(targetSessionId) : undefined
+              const cwd = initialAgent?.session.header.cwd ?? metadata?.cwd
+              const createdAt = initialAgent?.session.header.createdAt ?? metadata?.createdAt
+              const isCurrent = () => {
+                if (!active) return false
+                const current = targetAgent()
+                return initialAgent !== undefined ? current === initialAgent && current.session.header.cwd === cwd
+                  : current === undefined || current.session.header.cwd === cwd && current.session.header.createdAt === createdAt
+              }
+              return cwd && isCurrent() ? { cwd, fs, identity: JSON.stringify([targetSessionId, createdAt, cwd]), isCurrent } : undefined
+            }
+            for (const task of opened.listTasks()) {
+              const access = opened.getAccess(task.taskId)
+              if (!access || !mayRead(access, readerSessionId)) continue
+              const binding = task.currentBindingId ? opened.getBinding(task.currentBindingId) : undefined
+              if (binding?.sessionId !== targetSessionId || !['local', configOf().bridge?.hostId ?? 'local'].includes(binding.hostId)) continue
+              const metadata = initialAgent === undefined ? await panelSessionMetadata(targetSessionId) : undefined
+              if (initialAgent === undefined && metadata === undefined) return undefined
+              const cwd = initialAgent?.session.header.cwd ?? metadata?.cwd ?? binding.cwd
+              const createdAt = initialAgent?.session.header.createdAt ?? metadata?.createdAt
+              const isCurrent = () => {
+                if (!active) return false
+                const currentAccess = opened.getAccess(task.taskId)
+                const currentTask = opened.getTask(task.taskId)
+                const currentBinding = currentTask?.currentBindingId ? opened.getBinding(currentTask.currentBindingId) : undefined
+                const currentAgent = targetAgent()
+                return currentAccess !== undefined && mayRead(currentAccess, readerSessionId)
+                  && currentBinding?.bindingId === binding.bindingId && currentBinding.version === binding.version
+                  && currentBinding.sessionId === targetSessionId && currentBinding.cwd === binding.cwd
+                  && ['local', configOf().bridge?.hostId ?? 'local'].includes(currentBinding.hostId)
+                  && (initialAgent === undefined ? currentAgent === undefined || currentAgent.session.header.cwd === cwd && currentAgent.session.header.createdAt === createdAt
+                    : currentAgent === initialAgent && currentAgent.session.header.cwd === cwd)
+              }
+              return cwd && isCurrent() ? { cwd, fs, identity: JSON.stringify([binding.bindingId, binding.version, targetSessionId, createdAt, cwd]), isCurrent } : undefined
+            }
+            return undefined
+          },
+        }
+        const unregisterPreview = registerPreviewRoute(webServer, panelController, previewServices)
+        const unregisterTerminal = registerTerminalRoutes(webServer, panelController, {
+          context: (readerSessionId, targetSessionId) => previewServices.context(readerSessionId, targetSessionId),
+          subprocess() {
+            const value = probeContext.get('subprocess') as TerminalSubprocess | undefined
+            return typeof value?.spawnTerminal === 'function' && typeof value.resolveExecutable === 'function' ? value : undefined
+          },
+        })
+        previewScope.effect(() => () => { active = false; unregisterPreview?.(); unregisterTerminal?.() })
+      })
       ctx.effect(() => () => { panelController.dispose(); unregisterActions?.() })
       if (unregister === undefined) {
         announce(ctx, '[dsh-session-conductor] no web server in this composition, so the panel route is not registered')

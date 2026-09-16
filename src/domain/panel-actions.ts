@@ -50,6 +50,8 @@ export interface PanelAuthorization {
 export interface PanelCaller {
   readonly sessionId: string
   readonly authority: 'local-user'
+  /** Cold persisted sessions can inspect their UI, but cannot impersonate a live Agent. */
+  readonly readOnly?: true
 }
 
 export interface PanelHistory {

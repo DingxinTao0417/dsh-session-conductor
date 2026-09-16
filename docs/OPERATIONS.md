@@ -1,6 +1,8 @@
 # 安装、配置、使用、恢复与卸载
 
-更新日期：2026-09-15。本地 `0.1.5` 候选已完成 T36 的源码、全量、干净包、真实 Host/Edge 和 `desktop` Profile 链接验证，未公开发布或部署。创建／分叉成功后，主会话默认仅呈现创建结果和跳转并停止；只有用户在当前请求明确要求参与、并行、监控、汇总、比较、复核或验证时才例外。`0.1.6` 源码候选的 T37 只会在 create/fork 的 `instruction` 为非空字符串、准确 relay `messageId` 已持久化并写入 `armedAt` 后，于其首个委派 turn 的终态回填原父创建卡片一次；非终态不显示。它不会让父会话持续等待或监控。`0.1.5` / T36 的 `npm run check`（79 个测试文件 / 1,200 项）、lint/smoke、干净包和真实 Host/Edge 是历史 T36 证据；全部当前源码变更后的 `0.1.6` / T37 已另有本地 `npm run check`（82 个测试文件 / 1,236 项）、lint 与 smoke 通过的源码证据。官方离线 CLI 已将干净 27 文件候选（SHA-256 `6640c35d28ec9aca2254e088fd0d65e6f6b1c59b8e1048eb2bb26f4ee9a64648`）链接到本机 `desktop` Profile，收据见 `.verification/desktop-install-2026-09-15-completion-return/installation-completion-return.json`；它核验只有 conductor dependency 变化、bundle 和 `cordis.patch.yml` 未变以及配置组成项各一次。该证据不构成 GUI 已加载、真实 Host/Edge、冷/重启行为或最终完整验证。GUI 没有由安装流程启动，完整 Desktop 重开后的窗口确认仍待完成。`0.1.4` 不包含 T36。先阅读 [实现对照](IMPLEMENTATION.md)、[验收报告](ACCEPTANCE.md) 和 [独立宿主扩展](host-extension.md)。
+> 当前本机 `desktop` Profile 已通过官方离线 CLI 链接到 0.2.6 / T46 候选。安装流程没有启动或停止 Desktop；须完整退出（含托盘）并正常重开，才能加载新版 Host。启动后侧栏开关位于 `Session log` 右侧；宽屏概览卡在主会话正常文档流中右对齐，聊天滚动条位于主界面最右侧；打开自有工作区默认约 70/30 分配并隐藏概览，关闭后恢复。安装与回退证据见 [本机试用记录](DESKTOP-TRYOUT.md)；其他机器仍须核对宿主环境。下文版本记录保留历史归属。
+
+更新日期：2026-09-15。当前源码为 0.2.6 / PRD 2.11 / T46：已实现侧栏开关顺序修正、概览卡主界面归属、插件自有宽工作区、原生详情可见性适配和既有多会话协调能力。0.2.6 的 `npm run check`（97 个测试文件 / 1,407 项）、lint、smoke、隔离 Host/browser QA、候选包封存及官方离线 CLI Profile 安装均已完成。创建／分叉成功后仍默认委派即止；只有用户在当前请求明确要求主会话参与、并行、监控、汇总、比较、复核或验证时才例外。用户窗口必须完整退出（含托盘）后重开才能加载新版 Host；窗口实际重开确认仍待完成。0.2.5 及更早版本的安装和回滚证据保留在 `ACCEPTANCE.md` 与 `DESKTOP-TRYOUT.md`，不替代当前 0.2.6 结论。先阅读 [实现对照](IMPLEMENTATION.md)、[验收报告](ACCEPTANCE.md) 和 [独立宿主扩展](host-extension.md)。
 
 ## 构建与安装
 
@@ -128,3 +130,11 @@ config:
 `conductor_cleanup preview` 展示插件资源；`execute` 只清理用户确认的精确 ID，仍被引用、活动、修改或状态未知的目录拒绝删除。远程注册删除不删除远程文件；有任务绑定的 Host 不能直接移除。
 
 本轮保留的仅有源码、依赖、构建/候选产物和 `.verification` 证据。测试服务器、桥接子进程、浏览器和隔离 Host 均应在验证结束退出；具体终态见验收报告。无 Git 初始化、提交、推送、公开发布或正式部署。
+
+## 概览/预览接口404与升级（0.2.1）
+
+概览常驻，不提供关闭按钮。点击输出/来源标题或资源，在右侧预览；预览关闭不会关闭概览。窄窗口概览改为顶部紧凑布局，极窄窗口预览以临时抽屉显示。
+
+如果bootstrap等旧路由可达，而 `/conductor/overview`、`/conductor/overview/result` 或 `/conductor/preview` 返回无结构404，先确认插件包关联，再完整退出Desktop（包括托盘）并重新打开。仅刷新前端不能刷新Host模块图；不要因此删除Profile或Session记录。新版会显示明确诊断。文件不存在、格式/大小限制等结构化错误另行显示，不与旧Host混淆。完整重开仍失败时检查当前Profile的插件加载日志和路由，不反复安装或改写ASAR。
+
+文本预览仅对当前会话或已授权本机任务的工作区生效；最大512KiB，显示上限200,000个UTF-16代码单元。读取后重验授权、Binding、目录、provider和文件版本；拒绝越界、二进制和读取期间发生的身份变化。网页能否嵌入由目标站点决定，可使用“浏览器打开”。

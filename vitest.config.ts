@@ -10,5 +10,6 @@ export default defineConfig({
     include: ['tests/**/*.spec.ts'],
     environment: 'node',
     pool: 'forks',
+    server: { deps: { inline: ['@deepseek-ai/dsh-client-ui-primitives'] } },
   },
 })

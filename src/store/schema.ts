@@ -310,6 +310,10 @@ export const operationRecord = z.object({
    * unauthenticated HTTP route.
    */
   sessionLinkCapability: z.string().regex(/^[A-Za-z0-9_-]{43}$/).optional(),
+  /** Per-send receipt; the original create/fork receipt remains on Task. */
+  completionReturn: taskRecord.shape.completionReturn,
+  /** User-UI acknowledgement, separate from model history/watch cursors. */
+  overviewReadAt: z.string().optional(),
   taskId: z.string().optional(),
   messageId: z.string().optional(),
   delivery: z.enum(DELIVERY_STATES),

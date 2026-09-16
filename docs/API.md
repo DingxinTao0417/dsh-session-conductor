@@ -1,6 +1,6 @@
 # API、状态与持久化
 
-更新日期：2026-09-15。权威行为见 [PRD 2.5](PRD.md)。可执行参数定义在 `src/tools.ts`，记录 schema 在 `src/store/schema.ts`；类型检查和 Host `defineTool` 以这些定义为准。模型工具和面板执行同一份已注册工具，避免维护第二套权限逻辑。T35 的 `0.1.4` 是历史已验证版本；T36 已在 `0.1.5` 实现，并通过 `npm run check`（79 个测试文件 / 1,200 项测试）、lint、smoke、干净外部包真实 Host/Edge 4 场景和官方离线 CLI 的 `desktop` Profile 链接验证。T37 是当前 `0.1.6` 源码候选：只更新原父创建卡片一次，且不新增模型工具或父会话动作；最终完整验证、干净包、Host/Edge、Profile/Desktop 加载和安装证据待完成，不得把 `0.1.5` 的任何验证或安装事实写成 T37 已通过。运行中的 Desktop 仍须完整退出（含托盘）并重开后才会加载 `0.1.5`，用户重启确认尚未完成；本文不对 `0.1.6` 作安装声明，`0.1.4` 不包含 T36。证据和边界见 [ACCEPTANCE](ACCEPTANCE.md)。
+更新日期：2026-09-15。当前规范为 [PRD 2.11](PRD.md)。0.2.6 保留插件自有宽工作区：在公共 header slot 旁挂载独立 surface，默认约 70% 工作区 / 30% 聊天（排除左侧导航），聊天/工作区最小 320/300 CSS px；宽屏可拖动或键盘调整，窄屏使用避开 Desktop 顶栏的 drawer。可见侧栏开关追加到 `conversation.session.header.utilities` 的 `Session log` 后，工作区零尺寸锚点保留在 actions 插槽；概览卡宽屏在主会话正常文档流中右对齐，聊天滚动区保持完整宽度。工作区打开时隐藏概览卡，关闭后恢复；宿主原生 `details` 仍由 Host 管理，接口不承诺设置其宽度。其余同源 UserUI 概览、已读确认和准确结果读取路由字段与限制详见 [概览 API](CONVERSATION-OVERVIEW.md#http-与宿主扩展)。模型工具及显式前端操作共用授权和幂等服务；默认不会唤醒父模型。源码/隔离 Host/browser 验证、候选包和 Profile 安装证据见 [ACCEPTANCE](ACCEPTANCE.md) 与 [DESKTOP-TRYOUT](DESKTOP-TRYOUT.md)。
 
 ## 工具族
 
@@ -84,7 +84,7 @@ T37 没有新的 `conductor_*` JSON 参数和模型工具。它只对一次真�
 
 此路由自行执行 loopback 实际连接、Host、同源与 GET 限制，缓存为 no-store。它仅适用于本机单用户界面，不能作为远程鉴权。浏览器每个可见会话与 capability 组合共享一项 1000 毫秒读取；最后一个视图卸载时取消读取和计时器。该读取只刷新卡片，不是 `watch`、不唤醒父模型，也不消费 Watch。目标是否可打开还需在宿主公开 Session 列表中复核。
 
-前端声明 `slots, sessions, conversationEvents`；客户端模块依赖为 runtime 与 ui-conversation。创建节点投影已有 Host 工具事件，注册自己的 `conversation.chat.node` key；来源使用 `conversation.session.header.actions` 的追加位置。`sessions.open` 实现跳转，不读取或改写宿主私有状态。
+前端声明 `slots, sessions, conversationEvents`；客户端模块依赖为 runtime 与 ui-conversation。创建节点投影已有 Host 工具事件，注册自己的 `conversation.chat.node` key；来源使用 `conversation.session.header.actions` 的追加位置，工作区锚点同样挂在 actions，侧栏按钮挂在 `conversation.session.header.utilities` 的高顺序位置以跟随 `Session log`。`sessions.open` 实现跳转，不读取或改写宿主私有状态。
 
 ## 历史面板兼容接口（当前界面不挂载）
 

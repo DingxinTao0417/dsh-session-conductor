@@ -3231,9 +3231,14 @@ export class Coordinator {
     const agent = this.deps.agents.get(SessionId(binding.sessionId))
     if (agent === undefined) return false
     const message = this.deps.createMessage(text, relaySource())
+    const armedAt = this.deps.now()
     await this.deps.store.updateOperation(operationId, current => ({
       ...current,
       messageId: message.id,
+      ...text.length === 0 ? {} : { completionReturn: {
+        operationId, bindingId: binding.bindingId, bindingVersion: binding.version,
+        messageId: message.id, phase: 'armed' as const, armedAt, updatedAt: armedAt,
+      } },
     }))
     await this.deps.store.markDelivery(operationId, 'dispatching')
     const refusal = this.dispatchRefusal(operationId)

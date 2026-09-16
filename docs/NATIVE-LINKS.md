@@ -1,6 +1,6 @@
 # 原生聊天中的双向会话跳转
 
-适用的已安装事实为本地 `0.1.5` / PRD 2.4；本文同时记录 PRD 2.5 的 T37 `0.1.6` 源码候选。用户要求的主入口为普通聊天，浮动面板不再挂载。T36 的创建后“默认委派即止”规则已在 `0.1.5` 实现，并通过 `npm run check`（79 个测试文件 / 1,200 项测试）、lint、smoke、干净外部包真实 Host/Edge E2E 与官方离线 CLI 的 `desktop` Profile 链接验证。T37 的最终完整验证、干净包、Host/Edge、Profile/Desktop 加载和安装证据仍待完成。当前运行的 Desktop 还持有旧模块图，需完整退出（含托盘）并重开后才能完成用户窗口确认；本文不对 `0.1.6` 作安装声明，`0.1.4` 不包含此行为。
+本文记录聊天内双向跳转与 T37 首次完成卡片。当前实现为 0.2.6 / PRD 2.11，并保留这套交互、常驻 [会话概览卡](CONVERSATION-OVERVIEW.md) 和 T39 的独立追加回执；T45 增加插件自有宽工作区，T46 将侧栏开关移到 `Session log` 右侧并让概览卡回到主会话正常文档流，不改变跳转身份和权限边界。源码、隔离 Host/browser 验证及本机 Profile 安装见 [ACCEPTANCE](ACCEPTANCE.md) 与 [DESKTOP-TRYOUT](DESKTOP-TRYOUT.md)。安装不会替代用户完整退出并重开 Desktop 的原生窗口加载确认。
 
 ## 使用行为
 

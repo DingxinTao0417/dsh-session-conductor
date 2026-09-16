@@ -40,7 +40,7 @@ function isVisibleCompletion(task: TaskRecord): boolean {
  * checks at the HTTP projection boundary so a damaged or legacy record cannot
  * turn the capability of operation A into a reader for operation B's result.
  */
-function completionBelongsToOperation(
+export function completionBelongsToOperation(
   store: ConductorStore,
   task: TaskRecord,
   operation: StoredOperationRecord,

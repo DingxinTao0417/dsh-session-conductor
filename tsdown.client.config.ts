@@ -22,8 +22,8 @@ import { defineConfig } from 'tsdown'
  *   `import.meta` — without them the factory throws at boot.
  *
  * A purity gate is deliberately **not** reproduced. The Host's rejects any cross-plugin
- * value import, which is a workspace-wide invariant; this plugin has exactly one client
- * import (`react`, a platform module), so the gate would be a rule with nothing to
+ * value import, which is a workspace-wide invariant; this plugin uses only client
+ * imports (React and native UI primitives, both platform modules), so the gate would have nothing else to
  * enforce. That is recorded in `docs/host-api-notes.md` rather than left implicit.
  */
 

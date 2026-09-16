@@ -239,7 +239,7 @@ export function acceptPanelRequest(request: PanelRequest, response: PanelRespons
   }
   if (!trusted) {
     response.statusCode = 403
-    response.end(JSON.stringify({ error: 'FORBIDDEN: panel routes require a loopback connection and same-origin browser access' }))
+    response.end(JSON.stringify({ error: 'FORBIDDEN: panel routes require a loopback connection and same-origin browser access', code: 'ORIGIN_FORBIDDEN' }))
   }
   return trusted
 }
@@ -375,15 +375,17 @@ export function registerPanelDetailRoute(
 export const PANEL_BOOTSTRAP_ROUTE = '/conductor/panel/bootstrap'
 export const PANEL_ACTION_ROUTE = '/conductor/panel/action'
 
-/** Implemented by the Host adapter, which binds a local user's selection to an existing Agent. */
+/** Binds local UI reads to an existing Host Session; tool dispatch additionally needs a live Agent. */
 export interface PanelActionServices {
   catalog(): Promise<PanelBootstrap>
   authorize(controllerSessionId: string): Promise<PanelAuthorization>
   resolveCaller(token: string): Promise<PanelCaller | undefined>
+  /** Final synchronous lease check after asynchronous metadata/content reads. */
+  isCallerCurrent?(token: string, caller: PanelCaller): boolean
   execute(action: PanelAction, caller: PanelCaller): Promise<Readonly<Record<string, unknown>>>
 }
 
-async function panelJson(request: PanelRequest): Promise<unknown> {
+export async function panelJson(request: PanelRequest): Promise<unknown> {
   const contentType = request.headers?.['content-type']
   if (typeof contentType !== 'string' || !/^application\/json(?:\s*;\s*charset=utf-8)?$/i.test(contentType)) {
     throw new Error('UNSUPPORTED_MEDIA_TYPE')
@@ -424,7 +426,7 @@ export function registerPanelActionRoutes(
   const errorResponse = (response: PanelResponse, error: unknown): void => {
     const code = error instanceof Error ? error.message.split(':')[0] : ''
     const status: Readonly<Record<string, number>> = {
-      BAD_REQUEST: 400, FORBIDDEN: 403, UNAUTHORIZED: 401,
+      BAD_REQUEST: 400, FORBIDDEN: 403, UNAUTHORIZED: 401, CONTROLLER_UNAVAILABLE: 403, AUTHORIZATION_LIMIT: 429,
       PAYLOAD_TOO_LARGE: 413, UNSUPPORTED_MEDIA_TYPE: 415, REQUEST_TIMEOUT: 408,
     }
     response.statusCode = status[code ?? ''] ?? 409
