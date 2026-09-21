@@ -1,5 +1,9 @@
 # 本地验收与交付记录
 
+# Desktop 2.0.10 伴随包 0.1.1（2026-09-16）
+
+已将 `dsh-harness-compat@0.1.1`（session-controller `0.1.5-rc.2` overlay）与 `dsh-binary-files@0.1.1`（fs `0.1.5-rc.2` 精确补丁）通过官方离线 CLI 链接到本机 `desktop` Profile，主插件仍为既有 `0.2.6` 干净包。单元测试通过（compat 11 / binary 5）；官方 `--dump-config` 中三个组成 ID 各一行，且保留 `typert-gateway` 与 `session-controller`。隔离三次 Host 启动验证尚未作为 0.1.1 结论。不要把 2.0.3 / `0.1.1-rc.2` 伴随包记录复用为 2.0.10 结果。安装与回滚见 [DESKTOP-TRYOUT](DESKTOP-TRYOUT.md)。
+
 # 0.2.6 / T46：侧栏开关顺序与概览主界面归属
 
 源码验证已通过 `npm run check`（97 个测试文件 / 1,407 项测试）、`npm run lint` 与 Host/client/companion smoke。T46 将可见侧栏开关注入宿主公开的 `conversation.session.header.utilities` 列表并保持高顺序，使其紧跟 `Session log`；零尺寸 `WorkspacePreview` 锚点仍保留在 `conversation.session.header.actions`。`SessionOverviewCard` 宽屏不再使用绝对定位或为概览预留右侧 padding，而是在主会话 owner 的正常文档流中右对齐占位。

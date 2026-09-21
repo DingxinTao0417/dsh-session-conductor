@@ -75,8 +75,8 @@
 
 本仓库只包含主插件。部分能力需要独立交付的配套包：
 
-- `dsh-harness-compat` 提供已测试的 Host 兼容接口，用于隔离模型设置和原生 fork 目标参数。
-- `dsh-binary-files` 提供受保护的二进制文件写入能力。
+- `dsh-harness-compat@0.1.1` 在 Desktop 2.0.10 上以 overlay 提供隔离模型设置和原生 fork 目标参数；不要再安装面向 `dsh-host-apiproxy` 的 0.1.0。
+- `dsh-binary-files@0.1.1` 为 fs `0.1.5-rc.2` 提供受保护的二进制文件写入能力。
 
 当 Host 缺少某项能力时，插件会明确拒绝受影响的操作，不会静默改变语义。它不会改写已安装的 Desktop ASAR。
 

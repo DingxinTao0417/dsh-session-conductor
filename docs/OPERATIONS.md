@@ -36,7 +36,7 @@ dsh plugin --profile <profile-name> add <absolute-project-directory>
 dsh --profile <profile-name> --dump-config
 ```
 
-这会修改所选 profile，初次验证建议选择开发或测试 profile。2026-09-15 应用户试用要求，`0.1.5` 主包和两个 0.1.0 伴随包均从归档解包到无开发依赖的独立目录，再通过官方离线 CLI 链接到当前 Desktop 的 `desktop` Profile；最终归档、安装收据、组合复核与回滚见 [本机试用记录](DESKTOP-TRYOUT.md)。不要将带开发 node_modules 的源码目录直接用于三个包的实际安装，以免遮蔽 Desktop 宿主依赖。独立兼容扩展采用 bundle 行替换方式，按其指南配置；插件不会自动修改已安装 ASAR。没有相应可调用扩展时依赖功能保持禁用。
+这会修改所选 profile，初次验证建议选择开发或测试 profile。2026-09-15 应用户试用要求，`0.1.5` 主包和两个 0.1.0 伴随包均从归档解包到无开发依赖的独立目录，再通过官方离线 CLI 链接到当前 Desktop 的 `desktop` Profile；最终归档、安装收据、组合复核与回滚见 [本机试用记录](DESKTOP-TRYOUT.md)。不要将带开发 node_modules 的源码目录直接用于三个包的实际安装，以免遮蔽 Desktop 宿主依赖。Desktop 2.0.10 的 `dsh-harness-compat@0.1.1` 只插入 overlay 行，不得再禁用已删除的 `dsh-host-apiproxy`。独立兼容扩展按其指南配置；插件不会自动修改已安装 Desktop app。没有相应可调用扩展时依赖功能保持禁用。
 
 ### 0.1.5 安装恢复与组合复核
 

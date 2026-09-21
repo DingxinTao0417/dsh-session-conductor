@@ -106,13 +106,17 @@ Recorded against the specification's own baseline, commit
 | `fork` | `packages/api/session-controller/src/commands.ts:202` | Accepts only the source session and an optional `atSeq`. Mints `session-${randomUUID()}` itself, and sets the child's `cwd` from the source header. |
 | Wire request types | `packages/api/session-controller/src/types.ts` | Neither request carries the extension fields. |
 
-The actually installed `0.1.1-rc.2` layout implements the same two commands in
-`@deepseek-ai/dsh-host-apiproxy`, under `packages/host/apiproxy`. This exact bundle,
-rather than an assumed source-layout equivalent, is the companion patch baseline.
+The actually installed Desktop **2.0.10** layout implements the same two
+stock commands in `@deepseek-ai/dsh-api-session-controller@0.1.5-rc.2`.
+`dsh-host-apiproxy` is gone. Companion `dsh-harness-compat@0.1.1` is an
+insert-only overlay beside that controller; it does not replace the gateway
+row. Native UI `selectModel` still always `saveSelection`; isolated writes go
+through `ctx.conductorSessionModelSelection` with `rememberAsDefault: false`.
 
-Both are confirmed **absent** in the runtime actually installed on the reference
-machine (`0.1.1-rc.2`), which is why the capability report disables the two
-features there. See `docs/compatibility.md`.
+Desktop **2.0.3** implemented the same two commands in
+`@deepseek-ai/dsh-host-apiproxy@0.1.1-rc.2`. That exact bundle was the
+historical `0.1.0` companion patch baseline and must not be reused as a
+2.0.10 result.
 
 ## 4. Delivery stance
 
@@ -130,30 +134,19 @@ patches a user's Harness installation:
 
 ## 5. Status
 
-Implemented as the separate local project `dsh-harness-compat`, version `0.1.0`.
-Its companion-project compatibility record, which is not included in this
-package archive, records the exact package hash and actual Windows Host checks. Both build and startup
-reject an unsupported API bundle. The ordinary profile bundle disables the
-original gateway and loads one replacement; it never rewrites the installed ASAR.
+Implemented as the separate local project `dsh-harness-compat`, version `0.1.1`
+on Desktop 2.0.10 / session-controller `0.1.5-rc.2`. The overlay mounts the
+callable writer and fork services beside the stock controller and SHA-checks
+that exact API bundle. It never rewrites the installed app directory.
 
-Seven regression tests and a three-boot actual Host integration passed (23 write,
-4 restart and 3 stock rollback assertions). The Host test uses a controlled
-in-process provider with no model network requests. It verifies wire parameters,
-active/next separation, defaults, real conductor create/model/fork configuration,
-fork targets/concurrency/durable recovery, and unload restoration to the stock API.
-It also exercises a 50-node workflow, repeated drive, model drift, and both native
-pre-step source-freeze races. With 20 managed sessions and four controlled requests
-active, 100 in-process list calls measured P95 0.383 ms on the recorded Windows
-machine; this excludes browser/network latency. Full evidence and limitations are
-in the companion's compatibility record. Both extension services mount beside the
-real conductor, and all verification Host processes exit.
+Historical `0.1.0` replaced `dsh-host-apiproxy@0.1.1-rc.2` on Desktop 2.0.3;
+that SHA and those isolated Host boots are not 2.0.10 evidence. The 0.1.1
+overlay's isolated three-boot Host verification is still pending; unit tests
+cover receipts, `rememberAsDefault: false`, and selection wrapping. Full
+evidence and limitations are in the companion's compatibility record.
 The native fork callable is `ctx.conductorSessionFork.fork({ sessionId, atSeq?,
 newSessionId?, workspaceId?, cwd? }) => Promise<{ sessionId }>`.
 
-This is **local implementation and isolated verification**, not publication or
-deployment. The companion package is linked into this machine's `desktop`
-Profile, but the currently running Desktop process has not yet fully exited and
-reopened to load it. The reference installed Host ASAR remains unmodified.
-Linux, other versions and remote Host adoption remain unmeasured; the capability
-gate remains necessary until the companion is actually loaded and detected in
-the Host being used.
+This is **local implementation**, not publication. Linux, other versions and
+remote Host adoption remain unmeasured; the capability gate remains necessary
+until the companion is actually loaded and detected in the Host being used.

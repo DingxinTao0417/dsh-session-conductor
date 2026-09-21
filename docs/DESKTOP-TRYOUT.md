@@ -1,6 +1,24 @@
 # 当前 Desktop 本地试用记录
 
-## 当前已安装 0.2.6：T46 侧栏开关与概览主界面归属
+## 当前已安装：Desktop 2.0.10 伴随包 0.1.1
+
+日期：2026-09-16。本机 DSH Desktop 已是 **2.0.10**（未打包 `resources/app`，Host 包为 `0.1.5-rc.2`）。原先面向 2.0.3 / `dsh-host-apiproxy@0.1.1-rc.2` 的伴随包 `0.1.0` 不能再加载。已用官方离线 CLI 把干净外部包链接到 `desktop` Profile：
+
+- `dsh-harness-compat@0.1.1`：insert-only overlay，保留官方 `session-controller` 与 `typert-gateway`，只挂载 `conductorSessionModelSelection` / `conductorSessionFork`。基线 SHA-256 `16ecb48f33996efe72868f1603223214430634c5ac4c3e8fe9060bf240e990ff`。
+- `dsh-binary-files@0.1.1`：精确补丁 fs-local / fs-sandbox `0.1.5-rc.2`。
+- `dsh-session-conductor@0.2.6`：沿用既有 T46 干净包。
+
+官方 `--dump-config` 中 `dsh-session-conductor`、`conductor-binary-files`、`conductor-compatible-api-gateway` 各出现一次；`typert-gateway` 与 `session-controller` 仍在。单元测试：compat 11 项、binary 5 项通过。隔离三次 Host `verify:host` 尚未作为 0.1.1 结论。没有改写 Desktop app 目录，没有把带开发 `node_modules` 的源码目录链进 Profile。
+
+**正常打开 DSH Desktop** 才能加载新组合。若仍停留在恢复模式，先从插件管理恢复或重启，不要 factory reset。
+
+- 干净伴随包：`D:/dsh-local-plugins/dsh-session-conductor/0.1.1-20260916-desktop-2.0.10/`。
+- 主插件：`D:/dsh-local-plugins/dsh-session-conductor/0.2.6-20260915-t46/package`。
+- 收据：`.verification/desktop-install-2026-09-16-2.0.10/installation-2.0.10.json`。
+- 安装前备份：`D:/dsh/plugin-backups/session-conductor-20260916-2.0.10-companions/before-upgrade/`。
+- 回滚：同目录 `rollback-2.0.10-companions.ps1`；要求 Desktop 完全退出后，经官方 CLI `plugin remove` 卸下三个包，不直接覆盖 Profile。
+
+## 历史安装 0.2.6：T46 侧栏开关与概览主界面归属
 
 2026-09-15 本地完成 0.2.6 / PRD 2.11 / T46 的源码检查、隔离 Host/browser 布局验证、候选包封存和本机 `desktop` Profile 离线安装。当前安装链接为 `D:/dsh-local-plugins/dsh-session-conductor/0.2.6-20260915-t46/package`，包 `package.json` SHA-256 为 `3f72fca88470a7ce8ae9a7b4d23d3d8eaaa6a7bbec42124bdb3ff6090e383e6f`；候选归档 `dist/0.2.6-local-t46/dsh-session-conductor-0.2.6.tgz` 共 35 个文件，SHA-256 为 `57cf8b904bef9014fd0f114e300f4044908bf9eff743631136fb4824cd64de72`。
 

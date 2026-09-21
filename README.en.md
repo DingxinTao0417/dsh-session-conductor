@@ -75,8 +75,8 @@ Side chat, a complete file tree, and Git working-tree review are not integrated.
 
 This repository contains the main plugin. Some capabilities require separately delivered companion packages:
 
-- `dsh-harness-compat` supplies the tested Host compatibility surface for isolated model settings and native fork targets.
-- `dsh-binary-files` supplies guarded binary-file writes.
+- `dsh-harness-compat@0.1.1` is a Desktop 2.0.10 overlay for isolated model settings and native fork target parameters; do not install the `dsh-host-apiproxy` 0.1.0 replacement.
+- `dsh-binary-files@0.1.1` supplies guarded binary-file writes for fs `0.1.5-rc.2`.
 
 The plugin detects unavailable Host capabilities and refuses the affected operation instead of silently changing its meaning. It never rewrites the installed Desktop ASAR.
 

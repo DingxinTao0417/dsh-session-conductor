@@ -1,8 +1,17 @@
 # Compatibility record
 
-> Current revision (2026-09-15): the active product uses native chat creation cards and header return links; the historical local panel is not mounted. It includes independent Host API and binary companions, Windows IPC/SSH bridge code, a separate HTTPS snapshot service, and T35 direct public-history progress reads. Local `0.1.4` has passed the recorded verification and is linked into the `desktop` Profile, but the currently running Desktop process must fully exit and reopen before it can load that version. [ACCEPTANCE](ACCEPTANCE.md) records current results and boundaries. The older numbered C rows and narrative below are retained historical evidence for their tested revisions, not current feature availability. In particular, C164/C166's absent model extension, C10's absent transport and C11's absent browser are superseded by the scoped measurements below; they do not imply that Linux SSH or the installed full Harness shell was tested. C251's old node retry semantics are also superseded: a full-node retry consumes the workflow rework budget.
+> Current revision (2026-09-16): Desktop **2.0.10** Host packages are `0.1.5-rc.2`. Companion `dsh-harness-compat@0.1.1` is an insert-only overlay on `@deepseek-ai/dsh-api-session-controller`; `dsh-binary-files@0.1.1` patches fs-local/fs-sandbox `0.1.5-rc.2`. Do not reuse Desktop 2.0.3 / `0.1.1-rc.2` companion SHAs, installs, or isolated Host boots as 2.0.10 results. Isolated three-boot Host verification of the new companions is still pending; unit tests must pass before Profile adoption.
 
-## Current measured revision — 2026-09-15
+> Historical revision (2026-09-15): the active product uses native chat creation cards and header return links; the historical local panel is not mounted. It includes independent Host API and binary companions, Windows IPC/SSH bridge code, a separate HTTPS snapshot service, and T35 direct public-history progress reads. Local `0.1.4` has passed the recorded verification and is linked into the `desktop` Profile, but the currently running Desktop process must fully exit and reopen before it can load that version. [ACCEPTANCE](ACCEPTANCE.md) records current results and boundaries. The older numbered C rows and narrative below are retained historical evidence for their tested revisions, not current feature availability. In particular, C164/C166's absent model extension, C10's absent transport and C11's absent browser are superseded by the scoped measurements below; they do not imply that Linux SSH or the installed full Harness shell was tested. C251's old node retry semantics are also superseded: a full-node retry consumes the workflow rework budget.
+
+## Current measured revision — 2026-09-16 Desktop 2.0.10 companions
+
+| Surface | Current evidence | Limits |
+| --- | --- | --- |
+| Model API / native fork overlay | `dsh-harness-compat@0.1.1` unit tests against session-controller `0.1.5-rc.2` SHA `16ecb48f33996efe72868f1603223214430634c5ac4c3e8fe9060bf240e990ff` | Isolated three-boot Host verification pending; Linux untested |
+| Binary file provider | `dsh-binary-files@0.1.1` exact patches of fs-local/fs-sandbox `0.1.5-rc.2` | Isolated Host `verify:host` pending; 0.1.0 Host boots are not this baseline |
+
+## Historical measured revision — 2026-09-15 Desktop 2.0.3
 
 | Surface | Current evidence | Limits |
 | --- | --- | --- |
